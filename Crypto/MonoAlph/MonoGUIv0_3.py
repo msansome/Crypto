@@ -21,7 +21,8 @@ from tkinter import scrolledtext
 from tkinter import filedialog
 from tkinter import messagebox
 from random import shuffle
-import os
+import os, re, copy, wordPatterns, makeWordPatterns
+import simpleSubHackerV2 as ss_hack
 from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
 from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
 
@@ -76,6 +77,9 @@ class App(tk.Tk):
         ttk.Button(self.input_frame,
                    text="Encrypt/Decrypt",
                    command=self.encDec).grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
+        ttk.Button(self.input_frame,
+                   text="Pattern Decrypt",
+                   command=self.pattern_decrypt).grid(row=2, column=3, padx=5, pady=5, sticky=tk.E)
         ttk.Button(self.input_frame,
                    text="Auto Decrypt",
                    command=self.auto_break).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
@@ -182,6 +186,17 @@ class App(tk.Tk):
         self.make_dict_from_key()
         self.draw_key()
         print("Going to Crypto with key:",self.key)
+        self.plaintext = Crypto(self.ciphertext, self.key).decipher()
+        self.output_box.delete(0.0, tk.END)
+        self.output_box.insert(0.0, self.plaintext)
+
+    def pattern_decrypt(self):
+        self.ciphertext = self.input_box.get(0.0, tk.END)
+        letterMapping = ss_hack.hackSimpleSub(self.ciphertext)
+        self.key = ss_hack.decryptWithCipherletterMapping(self.ciphertext, letterMapping)
+        self.make_dict_from_key()
+        self.draw_key()
+        print("Going to Crypto with key:", self.key)
         self.plaintext = Crypto(self.ciphertext, self.key).decipher()
         self.output_box.delete(0.0, tk.END)
         self.output_box.insert(0.0, self.plaintext)

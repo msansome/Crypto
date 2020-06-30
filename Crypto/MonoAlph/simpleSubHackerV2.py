@@ -2,7 +2,8 @@
 # https://www.nostarch.com/crackingcodes/ (BSD Licensed)
 # Cracking Codes Book p. 226
 
-import os, re, copy, pyperclip, simpleSubCipher, wordPatterns, makeWordPatterns
+#import os, re, copy, pyperclip, simpleSubCipher, wordPatterns, makeWordPatterns
+import re, copy, wordPatterns, makeWordPatterns
 
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 nonLettersOrSpacePattern = re.compile('[^A-Z\s]')
@@ -24,7 +25,7 @@ def main():
     print()
     print('Copying hacked message to clipboard:')
     hackedMessage = decryptWithCipherletterMapping(message, letterMapping)
-    pyperclip.copy(hackedMessage)
+    #pyperclip.copy(hackedMessage)
     print(hackedMessage)
 
 def getBlankCipherletterMapping():
@@ -127,7 +128,7 @@ def decryptWithCipherletterMapping(ciphertext, letterMapping):
     # with any ambiguous decrypted letters replaced with underscores.
 
     # First create a simple sub key from the letterMapping mapping:
-    key = ['x'] * len(LETTERS)
+    key = ['*'] * len(LETTERS)
     for cipherletter in LETTERS:
         if len(letterMapping[cipherletter]) == 1:
             # If there is only one letter, add it to the key:
@@ -137,9 +138,13 @@ def decryptWithCipherletterMapping(ciphertext, letterMapping):
             ciphertext = ciphertext.replace(cipherletter.lower(), '_')
             ciphertext = ciphertext.replace(cipherletter.upper(), '_')
     key = ''.join(key)
+    key = key.upper()
+    print("The key is:", key)
+    return key
 
     # With the key we've created, decrypt the ciphertext:
-    return simpleSubCipher.decryptMessage(key, ciphertext)
+    #return simpleSubCipher.decryptMessage(key, ciphertext)
+
 
 
 if __name__ == '__main__':
