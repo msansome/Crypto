@@ -139,7 +139,6 @@ def decryptWithCipherletterMapping(ciphertext, letterMapping):
             ciphertext = ciphertext.replace(cipherletter.upper(), '_')
     key = ''.join(key)
     key = key.upper()
-    print("The key is:", key)
     return key
 
     # With the key we've created, decrypt the ciphertext:

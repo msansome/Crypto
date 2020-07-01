@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.3
+# Version 0.4
 
 #Version History
 #===============
@@ -10,6 +10,7 @@
 # v0.1 Inclusion of automated break algorithm plus improved alphabet entry events
 # v0.2 Addition of copy to keyboard facility
 # v0.3 Addition of "Import Key" functionality plus code tidy-up
+# v0.4 Inclusion of pattern matching decryption
 
 # ToDo: Implement Threading for automated break task.
 # Implement word pattern matching auto break method
@@ -31,6 +32,7 @@ class App(tk.Tk):
         super().__init__()
         self.title(title)
         self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        self.ciphertext =""
 
         # Create the top (input) frame:
         self.input_frame = tk.LabelFrame(self, text="Ciphertext")
@@ -115,12 +117,32 @@ class App(tk.Tk):
             self.alphabet_dict[self.alphabet[i]] = "*"
         self.draw_key()
 
-    def make_dict_from_key(self):
-        # Take the key and covert it into the dictionary used for encryption / decryptions
+    def make_dict_from_key(self): # Use the method in the Cryptanalysis class
+        key = self.key
+        self.alphabet_dict = Crypto(self.ciphertext, self.key).make_dictionary_from_key()
+
+    def make_key_from_dict(self):
+        # Creates a 26 character string of the key
+        # We cant just invert the dictionary, because missing letters would cause an error
+        # so we have to find our which letters are missing and add them as * to the key.
+        self.output_key = ""
+        missing_letters = []
+        missing_letter_count = 0
+        key_list = list(self.alphabet_dict.keys()) # Create lists of the keys and values
+        val_list = list(self.alphabet_dict.values())
+        for letter in self.alphabet:
+            if letter not in val_list:
+                missing_letters.append(letter)
         for i in range(26):
-            self.alphabet_dict[self.alphabet[i]] = self.key[i]
-        inverted_dict = {v: k for k, v in self.alphabet_dict.items()} # We need to convert keys into values and vice versa
-        self.alphabet_dict = inverted_dict
+            if val_list[i] not in self.alphabet:
+                cletter = "*"
+            else:
+                cletter = key_list[i]
+            self.output_key += cletter
+
+    def inv_key(self):
+        # Not currently used
+        invkey = [i2a(key.index(i)) for i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
 
     def draw_alphabet(self):
         # This method will run through and create all the labels and entry boxes
@@ -147,12 +169,6 @@ class App(tk.Tk):
         for i in range(26):
             self.entries[i].delete(0, tk.END)
             self.entries[i].insert(0, self.alphabet_dict[self.alphabet[i]])
-
-    def make_key_from_dict(self):
-        # Creates a 26 character string of the key
-        self.output_key = ""
-        for i in range(26):
-            self.output_key += self.alphabet_dict[self.alphabet[i]]
 
     def encDec(self):
         # This method will apply the key to the ciphertext and write the output into the output box
@@ -196,7 +212,6 @@ class App(tk.Tk):
         self.key = ss_hack.decryptWithCipherletterMapping(self.ciphertext, letterMapping)
         self.make_dict_from_key()
         self.draw_key()
-        print("Going to Crypto with key:", self.key)
         self.plaintext = Crypto(self.ciphertext, self.key).decipher()
         self.output_box.delete(0.0, tk.END)
         self.output_box.insert(0.0, self.plaintext)
