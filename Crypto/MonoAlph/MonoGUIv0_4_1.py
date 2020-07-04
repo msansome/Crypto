@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.4
+# Version 0.4.1
 
 #Version History
 #===============
@@ -11,10 +11,11 @@
 # v0.2 Addition of copy to keyboard facility
 # v0.3 Addition of "Import Key" functionality plus code tidy-up
 # v0.4 Inclusion of pattern matching decryption
+# v0.4.1 Create inverted key functionality added
 
 # ToDo: Implement Threading for automated break task.
-# Implement word pattern matching auto break method
-# Implement frequency analysis tools
+# ToDo: Implement frequency analysis tools
+# ToDo: Create inverse key function
 
 import tkinter as tk
 from tkinter import ttk
@@ -89,16 +90,19 @@ class App(tk.Tk):
         # Content for the tools frame
         ttk.Button(self.tools_frame,
                    text="Random Key",
-                   command=self.random_alphabet).grid(row=0, column=0, sticky=tk.W)
+                   command=self.random_alphabet).grid(row=0, column=0, padx=2, pady=2,sticky=tk.W)
         ttk.Button(self.tools_frame,
                    text="Copy Key to Clipboard",
-                   command=self.copy_key_to_clipboard).grid(row=1, column=0, sticky=tk.W)
+                   command=self.copy_key_to_clipboard).grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
         ttk.Button(self.tools_frame,
                    text="Import Key",
-                   command=self.create_key_import_window).grid(row=2, column=0, sticky=tk.W)
+                   command=self.create_key_import_window).grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
+        ttk.Button(self.tools_frame,
+                   text="Invert Key",
+                   command=self.inv_key).grid(row=3, column=0, padx=2, pady=2, sticky=tk.W)
         ttk.Button(self.tools_frame,
                    text="Reset Key",
-                   command=self.make_blank_alphabet).grid(row=3, column=0, sticky=tk.W)
+                   command=self.make_blank_alphabet).grid(row=4, column=0, padx=2, pady=2, sticky=tk.W)
 
         # Content for the output frame, (one text box only).
         self.output_box = scrolledtext.ScrolledText(self.output_frame, width=40, height=8, wrap=tk.WORD)
@@ -142,7 +146,13 @@ class App(tk.Tk):
 
     def inv_key(self):
         # Not currently used
-        invkey = [i2a(key.index(i)) for i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
+        inverted_dict = {v: k for k, v in self.alphabet_dict.items()}
+        print(self.alphabet_dict)
+        self.alphabet_dict = inverted_dict
+        print(self.alphabet_dict)
+        print(inverted_dict)
+        self.draw_key()
+
 
     def draw_alphabet(self):
         # This method will run through and create all the labels and entry boxes
