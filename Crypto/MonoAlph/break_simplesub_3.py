@@ -6,21 +6,29 @@ import re
 
 class Mono_break:
     def __init__(self, ciphertext):
-        print("Starting...")
         self.fitness = ngram_score('english_quadgrams.txt') # load our quadgram statistics
         self.ciphertext = ciphertext
+        screenwidth = 65
+        self.short_ctext = self.ciphertext[:screenwidth]
         self.ctext = re.sub('[^A-Z]','',self.ciphertext.upper())
-        
         self.maxkey = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
         self.maxscore = -99e9
         self.parentscore,self.parentkey = self.maxscore,self.maxkey[:]
-        print ("Substitution Cipher solver, you may have to wait several iterations")
-        print ("for the correct result. Press ctrl+c to exit program.")
+        #print ("Substitution Cipher solver, you may have to wait several iterations")
+        #print ("for the correct result. Press ctrl+c to exit program.")
         self.stopped = False
-        self.do_break()
 
-    def do_break(self):
+    def do_break(self, proc):
+        # proc is a callback function to allow data to be passed back to the calling program.
+        message = "Finished Loading Dictionaries\n"
+        key = ""
+        if proc == None:
+            self.proc = self.make_output
+        else:
+            self.proc = proc
+        proc(message,key)
         # keep going until we are killed by the user
+        proc("Now doing break", key)
         i = 0
         while not self.stopped:
             i = i+1
@@ -46,13 +54,15 @@ class Mono_break:
             # keep track of best score seen so far
             if self.parentscore>self.maxscore:
                 self.maxscore,self.maxkey = self.parentscore,self.parentkey[:]
-                print ('\nbest score so far:',self.maxscore,'on iteration',i)
-                plaintext = Crypto(self.ciphertext, self.maxkey).decipher()
+                plaintext = Crypto(self.short_ctext, self.maxkey).decipher()
                 self.bestkey = ''.join(self.maxkey)
-                print ('    best key: '+ self.bestkey)
-                print('    plaintext: ' + plaintext)
-                if self.maxscore > -6000:
-                    self.stopped = True
+                self.message = f'\nbest score so far: {self.maxscore} on iteration {i}.\n  ' \
+                               f'best key: {self.bestkey}\n  plaintext: {plaintext}'
+                self.proc(self.message, self.bestkey) # return the message and the key to main prog.
+
+
+    def make_output(self, message, key):
+        print(message)
 
 
 def main():

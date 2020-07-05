@@ -86,7 +86,7 @@ class App(tk.Tk):
                    command=self.pattern_decrypt).grid(row=2, column=3, padx=5, pady=5, sticky=tk.E)
         ttk.Button(self.input_frame,
                    text="Auto Decrypt",
-                   command=self.auto_break).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
+                   command=self.create_auto_decrypt_window).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
 
         # Content for the tools frame
         ttk.Button(self.tools_frame,
@@ -200,26 +200,30 @@ class App(tk.Tk):
     def auto_break(self):
         # This will instantiate a Mono_break object from the Mono_break class imported break_simplesub_3
         # and try to perform a hill-climbing algorithm attack on the cipher.
-        self.auto_break = mb()
-        self.control_thread = Thread(target=lambda: self.test_run.my_long_procedure(self.progress), daemon=True)
-        self.control_thread = Thread(target=self.auto_break., daemon=True, args=(self.progress,))
-        self.control_thread.start()
-        print("Going to delete")
-        self.output_box.delete(0.0, tk.END)
-        print("Should have deleted")
-        message = "\nThis could take some time. Please be Patient."
-        print(message)
-        self.output_box.insert(0.0, message)
+        # Uses threading to detach the process
         self.ciphertext = self.input_box.get(0.0, tk.END)
-        self.key = mb(self.ciphertext).bestkey
-        print("Bestkey =",self.key)
-        #self.initialise_dictionaries()
+        print(self.ciphertext)
+        self.auto_break = mb(self.ciphertext)
+        self.control_thread = Thread(target=self.auto_break.do_break, daemon=True, args=(self.progress,))
+        message = "Loading Dictionaries...\n"
+        self.auto_decrypt_output.delete(0.0, tk.END)
+        self.auto_decrypt_output.insert(0.0, message)
+        self.control_thread.start()
+
+    def stop_auto_break(self):
+        self.auto_break.stopped = True
         self.make_dict_from_key()
         self.draw_key()
-        print("Going to Crypto with key:",self.key)
         self.plaintext = Crypto(self.ciphertext, self.key).decipher()
         self.output_box.delete(0.0, tk.END)
         self.output_box.insert(0.0, self.plaintext)
+        self.auto_decrypt_window.destroy()
+
+
+    def progress(self, message, key):
+        self.message = message
+        self.key = key
+        self.auto_decrypt_output.insert(tk.END, self.message)
 
     def pattern_decrypt(self):
         self.ciphertext = self.input_box.get(0.0, tk.END)
@@ -230,10 +234,6 @@ class App(tk.Tk):
         self.plaintext = Crypto(self.ciphertext, self.key).decipher()
         self.output_box.delete(0.0, tk.END)
         self.output_box.insert(0.0, self.plaintext)
-
-    def stop(self):
-        # Not currently used
-        mb.stopped = True
 
     def copy_to_clipboard(self, output):
         # Main Copy to clipboard method (takes the desired item as a parameter)
@@ -330,6 +330,37 @@ class App(tk.Tk):
         self.key_import_entry.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
         key_import_button.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
         key_import_cancel_button.grid(row=2, column=1, padx=5, pady=5, sticky = tk.E)
+
+
+    def create_auto_decrypt_window(self):
+        # New window spawned when "Import Kwy" button is clicked
+        self.auto_decrypt_window = tk.Toplevel(self)
+        self.auto_decrypt_window.title("Attempt Automatic Decrypt Using Hill-Climbing Algorithm")
+        self.auto_decrypt_frame = tk.LabelFrame(self.auto_decrypt_window, text="Automatic Decrypt")
+        self.auto_decrypt_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.auto_decrypt_frame.columnconfigure(0, weight=1)
+        self.auto_decrypt_frame.rowconfigure(0, weight=1)
+        auto_decrypt_label = ttk.Label(self.auto_decrypt_frame, text="Please press start to begin")
+        #self.auto_decrypt_output = tk.Text(self.auto_decrypt_frame, width=36)
+        self.auto_decrypt_output = scrolledtext.ScrolledText(self.auto_decrypt_frame, height=8, wrap=tk.WORD)
+        self.auto_decrypt_output.columnconfigure(0, weight=1)
+        self.auto_decrypt_output.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW)
+        auto_decrypt_start_button = ttk.Button(self.auto_decrypt_frame, text="Start Decrypt",
+                                               command=self.auto_break)
+        auto_decrypt_cancel_button = ttk.Button(self.auto_decrypt_frame, text="Cancel",
+                                                command=lambda :self.auto_decrypt_window.destroy())
+        auto_decrypt_stop_button =ttk.Button(self.auto_decrypt_frame, text="Stop!",
+                                             command=self.stop_auto_break)
+        auto_decrypt_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
+        self.auto_decrypt_output.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
+        auto_decrypt_start_button.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
+        auto_decrypt_stop_button.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+        auto_decrypt_cancel_button.grid(row=2, column=2, padx=5, pady=5, sticky = tk.E)
+        message = """This tool will attempt to break the Substitution Cipher.
+        It may take several iterations and might take some to to complete.
+        Press "Start" to begin, and when a satisfactory answer is produced,
+        press "Stop" to return to the main program."""
+        self.auto_decrypt_output.insert(0.0, message)
 
     def fileDialog(self):
         # Method which invokes the inport file dialogue
