@@ -202,16 +202,15 @@ class App(tk.Tk):
         # and try to perform a hill-climbing algorithm attack on the cipher.
         # Uses threading to detach the process
         self.ciphertext = self.input_box.get(0.0, tk.END)
-        print(self.ciphertext)
-        self.auto_break = mb(self.ciphertext)
-        self.control_thread = Thread(target=self.auto_break.do_break, daemon=True, args=(self.progress,))
+        self.auto_break_obj = mb(self.ciphertext)
+        self.control_thread = Thread(target=self.auto_break_obj.do_break, daemon=True, args=(self.progress,))
         message = "Loading Dictionaries...\n"
         self.auto_decrypt_output.delete(0.0, tk.END)
         self.auto_decrypt_output.insert(0.0, message)
         self.control_thread.start()
 
     def stop_auto_break(self):
-        self.auto_break.stopped = True
+        self.auto_break_obj.stopped = True
         self.make_dict_from_key()
         self.draw_key()
         self.plaintext = Crypto(self.ciphertext, self.key).decipher()
