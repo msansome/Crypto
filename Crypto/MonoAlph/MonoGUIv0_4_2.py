@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.5
+# Version 0.5.1
 
 #Version History
 #===============
@@ -14,6 +14,7 @@
 # v0.4.1 Create inverted key functionality added
 # v0.4.3 Inclusion of threading for Auto Decrypt
 # v0.5 Basic Frequency Analysis added - not yet complete
+# v0.5.1 Improved version of frequency plots
 
 # ToDo: Implement frequency analysis tools
 # ToDo: Create inverse key function
