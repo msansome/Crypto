@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.4.2
+# Version 0.4.3
 
 #Version History
 #===============
@@ -12,6 +12,7 @@
 # v0.3 Addition of "Import Key" functionality plus code tidy-up
 # v0.4 Inclusion of pattern matching decryption
 # v0.4.1 Create inverted key functionality added
+#v.0.4.3 Inclusion of threading for Auto Decrypt
 
 # ToDo: Implement Threading for automated break task.
 # ToDo: Implement frequency analysis tools
@@ -154,7 +155,6 @@ class App(tk.Tk):
         print(inverted_dict)
         self.draw_key()
 
-
     def draw_alphabet(self):
         # This method will run through and create all the labels and entry boxes
         # for the 26 letters of the alphabet in a loop (and store the entry objects in a list)
@@ -164,7 +164,6 @@ class App(tk.Tk):
                         text=self.alphabet[i]
                         ).grid(row=0, column=i, padx=1, pady=1, sticky=tk.W)
             entry = tk.Entry(self.alphabet_frame, width=1, name=f"letter{self.alphabet[i]}")
-            #entry.insert(0,self.alphabet_dict[self.alphabet[i]])
             entry.grid(row=1, column=i, padx=1, pady=1, sticky=tk.W)
             entry.bind("<FocusIn>", self.handleIN)
             entry.bind("<Return>",self.handleOut)
@@ -217,7 +216,6 @@ class App(tk.Tk):
         self.output_box.delete(0.0, tk.END)
         self.output_box.insert(0.0, self.plaintext)
         self.auto_decrypt_window.destroy()
-
 
     def progress(self, message, key):
         self.message = message
@@ -330,7 +328,6 @@ class App(tk.Tk):
         key_import_button.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
         key_import_cancel_button.grid(row=2, column=1, padx=5, pady=5, sticky = tk.E)
 
-
     def create_auto_decrypt_window(self):
         # New window spawned when "Import Kwy" button is clicked
         self.auto_decrypt_window = tk.Toplevel(self)
@@ -339,9 +336,9 @@ class App(tk.Tk):
         self.auto_decrypt_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
         self.auto_decrypt_frame.columnconfigure(0, weight=1)
         self.auto_decrypt_frame.rowconfigure(0, weight=1)
-        auto_decrypt_label = ttk.Label(self.auto_decrypt_frame, text="Please press start to begin")
+        auto_decrypt_label = ttk.Label(self.auto_decrypt_frame, text="Please press start to begin - Press STOP when a likely answer is revealed.")
         #self.auto_decrypt_output = tk.Text(self.auto_decrypt_frame, width=36)
-        self.auto_decrypt_output = scrolledtext.ScrolledText(self.auto_decrypt_frame, height=8, wrap=tk.WORD)
+        self.auto_decrypt_output = scrolledtext.ScrolledText(self.auto_decrypt_frame, height=10, wrap=tk.WORD)
         self.auto_decrypt_output.columnconfigure(0, weight=1)
         self.auto_decrypt_output.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW)
         auto_decrypt_start_button = ttk.Button(self.auto_decrypt_frame, text="Start Decrypt",
@@ -356,9 +353,10 @@ class App(tk.Tk):
         auto_decrypt_stop_button.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
         auto_decrypt_cancel_button.grid(row=2, column=2, padx=5, pady=5, sticky = tk.E)
         message = """This tool will attempt to break the Substitution Cipher.
-        It may take several iterations and might take some to to complete.
-        Press "Start" to begin, and when a satisfactory answer is produced,
-        press "Stop" to return to the main program."""
+
+It may take several iterations and might take some to to complete.
+Press "Start" to begin, and when a satisfactory answer is produced,
+press "Stop" to return to the main program."""
         self.auto_decrypt_output.insert(0.0, message)
 
     def fileDialog(self):

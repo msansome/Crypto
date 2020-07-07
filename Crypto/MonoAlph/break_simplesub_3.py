@@ -28,7 +28,7 @@ class Mono_break:
             self.proc = proc
         proc(message,key)
         # keep going until we are killed by the user
-        proc("Now doing break", key)
+        proc("Attempting Decrypt.\nWorking...", key)
         i = 0
         while not self.stopped:
             i = i+1

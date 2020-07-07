@@ -10,8 +10,8 @@ nonLettersOrSpacePattern = re.compile('[^A-Z\s]')
 
 
 def main():
-    message = 'Sy l nlx sr pyyacao l ylwj eiswi upar lulsxrj isr sxrjsxwjr, ia esmm rwctjsxsza sj wmpramh, lxo txmarr jia aqsoaxwa sr pqaceiamnsxu, ia esmm caytra jp famsaqa sj. Sy, px jia pjiac ilxo, ia sr pyyacao rpnajisxu eiswi lyypcor l calrpx ypc lwjsxu sx lwwpcolxwa jp isr sxrjsxwjr, ia esmm lwwabj sj aqax px jia rmsuijarj aqsoaxwa. Jia pcsusx py nhjir sr agbmlsxao sx jisr elh. -Facjclxo Ctrramm'
-
+    #message = 'Sy l nlx sr pyyacao l ylwj eiswi upar lulsxrj isr sxrjsxwjr, ia esmm rwctjsxsza sj wmpramh, lxo txmarr jia aqsoaxwa sr pqaceiamnsxu, ia esmm caytra jp famsaqa sj. Sy, px jia pjiac ilxo, ia sr pyyacao rpnajisxu eiswi lyypcor l calrpx ypc lwjsxu sx lwwpcolxwa jp isr sxrjsxwjr, ia esmm lwwabj sj aqax px jia rmsuijarj aqsoaxwa. Jia pcsusx py nhjir sr agbmlsxao sx jisr elh. -Facjclxo Ctrramm'
+    message = 'DROBO HGC YXKO EZYX G DSWO G PSCROBWGX VSFOM HSDR RSC HSPO SX G ZSQCDLO KVYCO IL DRO COG GXM OFOBL MGL RO HOXD YED PSCRSXQ GXM RO PSCROM GXM RO PSCROM GXM YXKO RO HGC CSDDSXQ HSDR RSC BYM VYYUSXQ GD DRO KVOGB HGDOB GXM RO CGD GXM RO CGD DROX RSC VSXO CEMMOXVL HOXD MYHX PGB MYHX IOVYH GXM HROX RO MBOH SD EZ GQGSX RO IBYEQRD YED G VGBQO PVYEXMOB DROX DRO PVYEXMOB CGSM DY RSW RGBU LYE PSCROBWGX S ZBGL LYE VOD WO VSFO S GW XY PVYEXMOB BOGVVL IED GX OXKRGXDOM ZBSXKO HRGD QYYM HSVV SD MY LYE DY USVV WO S CRYEVM XYD IO QYYM DY OGD ZED WO SX DRO HGDOB GQGSX GXM VOD WO QY KYWO CGSM DRO PSCROBWGX DROBO SC XY XOOM PYB CY WGXL HYBMC GIYED SD G PSCR DRGD KGX DGVU S CRYEVM KOBDGSXVL VOD QY GXLRYH GXM HSDR DRGD RO ZED RSW IGKU GQGSX SXDY DRO KVOGB HGDOB GXM DRO PVYEXMOB HOXD DY DRO IYDDYW VOGFSXQ G VYXQ CDBOGU YP IVYYM IORSXM RSW DROX DRO PSCROBWGX QYD EZ GXM HOXD RYWO DY RSC HSPO SX DRO ZSQCDLO'
     # Determine the possible valid ciphertext translations:
     print('Attempting Decryption...')
     letterMapping = hackSimpleSub(message)
