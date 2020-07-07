@@ -44,6 +44,7 @@ cbyexndronomkiypdrkdmyvycckvgbomulyexnvocckxnlkbodrovyxokxnvofovckxn
 ccdbodmrpkbkgki"""
 
 txt2 = randText()
-plot_freqs(txt2)
+#plot_freqs(txt2)
+plot_freqs(ciphertext1)
 
 

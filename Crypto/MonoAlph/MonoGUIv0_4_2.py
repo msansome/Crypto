@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.4.3
+# Version 0.5
 
 #Version History
 #===============
@@ -12,9 +12,9 @@
 # v0.3 Addition of "Import Key" functionality plus code tidy-up
 # v0.4 Inclusion of pattern matching decryption
 # v0.4.1 Create inverted key functionality added
-#v.0.4.3 Inclusion of threading for Auto Decrypt
+# v0.4.3 Inclusion of threading for Auto Decrypt
+# v0.5 Basic Frequency Analysis added - not yet complete
 
-# ToDo: Implement Threading for automated break task.
 # ToDo: Implement frequency analysis tools
 # ToDo: Create inverse key function
 
@@ -26,6 +26,7 @@ from tkinter import messagebox
 from random import shuffle
 from threading import Thread
 import os, re, copy, wordPatterns, makeWordPatterns
+import matplotlib.pyplot as plt
 import simpleSubHackerV2 as ss_hack
 from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
 from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
@@ -75,7 +76,7 @@ class App(tk.Tk):
                                                                                             sticky=tk.W)
         self.input_box = scrolledtext.ScrolledText(self.input_frame, height=8, wrap=tk.WORD)
         self.input_box.columnconfigure(0, weight=1)
-        self.input_box.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW)
+        self.input_box.grid(row=1, column=0, columnspan=6, sticky=tk.NSEW)
         ttk.Button(self.input_frame,
                    text="Load from File",
                    command=self.fileDialog).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
@@ -88,6 +89,9 @@ class App(tk.Tk):
         ttk.Button(self.input_frame,
                    text="Auto Decrypt",
                    command=self.create_auto_decrypt_window).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
+        ttk.Button(self.input_frame,
+                   text="Frequency Analysis",
+                   command=self.plot_freqs).grid(row=2, column=5, padx=5, pady=5, sticky=tk.E)
 
         # Content for the tools frame
         ttk.Button(self.tools_frame,
@@ -329,7 +333,7 @@ class App(tk.Tk):
         key_import_cancel_button.grid(row=2, column=1, padx=5, pady=5, sticky = tk.E)
 
     def create_auto_decrypt_window(self):
-        # New window spawned when "Import Kwy" button is clicked
+        # New window spawned when "Import Key" button is clicked
         self.auto_decrypt_window = tk.Toplevel(self)
         self.auto_decrypt_window.title("Attempt Automatic Decrypt Using Hill-Climbing Algorithm")
         self.auto_decrypt_frame = tk.LabelFrame(self.auto_decrypt_window, text="Automatic Decrypt")
@@ -367,6 +371,28 @@ press "Stop" to return to the main program."""
         with open(self.filename) as input_file:
             self.input_box.delete(0.0,tk.END)
             self.input_box.insert(0.0, input_file.read())
+
+    def plot_freqs(self):
+        self.ciphertext = self.input_box.get(0.0, tk.END)
+        analysis = Crypto(self.ciphertext)
+        freqs = analysis.frequencies()
+        print(freqs)
+        # ciphertext = self.ciphertext.upper()
+        # print("ctext =",ciphertext)
+        letters = []
+        for letter in self.alphabet:
+            if letter in freqs:
+                letters.append(freqs[letter])
+            else:
+                letters.append(0)
+        print(letters)
+        letter_colours = plt.cm.hsv([0.8 * i / max(letters) for i in letters])
+        #
+        plt.bar(range(26), letters)
+        plt.xticks(range(26), self.alphabet)  # letter labels on x-axis
+        plt.tick_params(axis="x", bottom=False)  # no ticks, only labels on x-axis
+        plt.title("Frequency of each letter")
+        plt.show()
 
 
 if __name__ == "__main__":
