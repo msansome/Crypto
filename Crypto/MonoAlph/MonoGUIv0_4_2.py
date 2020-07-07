@@ -27,9 +27,13 @@ from random import shuffle
 from threading import Thread
 import os, re, copy, wordPatterns, makeWordPatterns
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import simpleSubHackerV2 as ss_hack
 from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
 from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
+FREQS = [8.497, 1.492, 2.202, 4.253, 11.162, 2.228, 2.015, 6.094, 7.546, 0.153, 1.292, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095, 7.587, 6.327, 9.356, 2.758, 0.978, 2.56, 0.15, 1.994, 0.077]
+
 
 class App(tk.Tk):
     def __init__(self, title="Sample App", *args, **kwargs):
@@ -91,7 +95,7 @@ class App(tk.Tk):
                    command=self.create_auto_decrypt_window).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
         ttk.Button(self.input_frame,
                    text="Frequency Analysis",
-                   command=self.plot_freqs).grid(row=2, column=5, padx=5, pady=5, sticky=tk.E)
+                   command=self.create_freq_analysis_window).grid(row=2, column=5, padx=5, pady=5, sticky=tk.E)
 
         # Content for the tools frame
         ttk.Button(self.tools_frame,
@@ -316,7 +320,7 @@ class App(tk.Tk):
         self.draw_key()
 
     def create_key_import_window(self):
-        # New window spawned when "Import Kwy" button is clicked
+        # New window spawned when "Import Key" button is clicked
         self.key_import_window = tk.Toplevel(self)
         self.key_import_window.title("Key Import")
         self.key_import_frame = tk.LabelFrame(self.key_import_window, text="Key Import")
@@ -363,6 +367,49 @@ Press "Start" to begin, and when a satisfactory answer is produced,
 press "Stop" to return to the main program."""
         self.auto_decrypt_output.insert(0.0, message)
 
+    def create_freq_analysis_window(self):
+        # New window spawned when "Import Key" button is clicked
+        self.freq_analysis_window = tk.Toplevel(self)
+        self.freq_analysis_window.title("Frequency Analysis")
+        self.freq_analysis_frame = tk.LabelFrame(self.freq_analysis_window, text="Letter Frequencies")
+        self.freq_analysis_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.freq_analysis_frame.columnconfigure(0, weight=1)
+        self.freq_analysis_frame.rowconfigure(0, weight=1)
+        freq_analysis_label = ttk.Label(self.freq_analysis_frame,
+                                       text="Frequency Analysis Stuff..")
+
+        self.plot_freqs()
+
+        f = Figure(figsize=(5,5), dpi=100)
+        a = f.add_subplot(111)
+        a.bar(range(26), self.letter_freqs)
+        a.set_xticks(range(26))
+        a.set_xticklabels([x for x in self.alphabet])
+        a.set_title("Frequency of each letter (%)")
+
+        canvas = FigureCanvasTkAgg(f, self.freq_analysis_window)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=0, column=0)
+        #toolbar = NavigationToolbar2Tk(canvas,self.freq_analysis_window)
+        canvas._tkcanvas.grid(row=1, column=0)
+
+        # self.freq_analysis_output = scrolledtext.ScrolledText(self.freq_analysis_frame, height=10, wrap=tk.WORD)
+        # self.freq_analysis_output.columnconfigure(0, weight=1)
+        # self.freq_analysis_output.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW)
+        # auto_decrypt_start_button = ttk.Button(self.freq_analysis_frame, text="Start Decrypt",
+        #                                        command=self.auto_break)
+        # freq_analysis_cancel_button = ttk.Button(self.freq_analysis_frame, text="Cancel",
+        #                                         command=lambda: self.freq_analysis_window.destroy())
+        # freq_analysis_stop_button = ttk.Button(self.freq_analysis_frame, text="Stop!",
+        #                                       command=self.stop_auto_break)
+        # freq_analysis_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
+        # self.freq_analysis_output.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
+        # auto_decrypt_start_button.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        # freq_analysis_stop_button.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+        # freq_analysis_cancel_button.grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
+        # message = "Blah Blah"
+        # self.freq_analysis_output.insert(0.0, message)
+
     def fileDialog(self):
         # Method which invokes the inport file dialogue
         self.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select A File", filetypes=[
@@ -379,20 +426,15 @@ press "Stop" to return to the main program."""
         print(freqs)
         # ciphertext = self.ciphertext.upper()
         # print("ctext =",ciphertext)
-        letters = []
+        self.letter_freqs = []
         for letter in self.alphabet:
             if letter in freqs:
-                letters.append(freqs[letter])
+                self.letter_freqs.append(freqs[letter])
             else:
-                letters.append(0)
-        print(letters)
-        letter_colours = plt.cm.hsv([0.8 * i / max(letters) for i in letters])
-        #
-        plt.bar(range(26), letters)
-        plt.xticks(range(26), self.alphabet)  # letter labels on x-axis
-        plt.tick_params(axis="x", bottom=False)  # no ticks, only labels on x-axis
-        plt.title("Frequency of each letter")
-        plt.show()
+                self.letter_freqs.append(0)
+        print(self.letter_freqs)
+        #letter_colours = plt.cm.hsv([0.8 * i / max(self.letter_freqs) for i in self.letter_freqs])
+
 
 
 if __name__ == "__main__":
