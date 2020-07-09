@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.5.1
+# Version 0.5.2
 
 #Version History
 #===============
@@ -15,6 +15,7 @@
 # v0.4.3 Inclusion of threading for Auto Decrypt
 # v0.5 Basic Frequency Analysis added - not yet complete
 # v0.5.1 Improved version of Frequency Analysis plots
+# v0.5.2 Finished version of Frequency Analysis plots
 
 # ToDo: Implement frequency analysis tools
 # ToDo: Create inverse key function
@@ -27,13 +28,18 @@ from tkinter import messagebox
 from random import shuffle
 from threading import Thread
 import os, re, copy, wordPatterns, makeWordPatterns
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+except ModuleNotFoundError:
+    message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system administartor'
+    tk.messagebox.showwarning("Warning", message)
+
 import simpleSubHackerV2 as ss_hack
 from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
 from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
-FREQS = [8.497, 1.492, 2.202, 4.253, 11.162, 2.228, 2.015, 6.094, 7.546, 0.153, 1.292, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095, 7.587, 6.327, 9.356, 2.758, 0.978, 2.56, 0.15, 1.994, 0.077]
+FREQS = {'A':8.497, 'B':1.492, 'C':2.202, 'D':4.253, 'E':11.162, 'F':2.228, 'G':2.015, 'H':6.094, 'I':7.546, 'J':0.153, 'K':1.292, 'L':4.025, 'M':2.406, 'N':6.749, 'O':7.507, 'P':1.929, 'Q':0.095, 'R':7.587, 'S':6.327, 'T':9.356, 'U':2.758, 'V':0.978, 'W':2.56, 'X':0.15, 'Y':1.994, 'Z':0.077}
 
 
 class App(tk.Tk):
@@ -43,6 +49,7 @@ class App(tk.Tk):
         self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         self.ciphertext =""
 
+        self.sort_dict(FREQS)
         # Create the top (input) frame:
         self.input_frame = tk.LabelFrame(self, text="Ciphertext")
         self.input_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
@@ -377,10 +384,16 @@ press "Stop" to return to the main program."""
         self.freq_analysis_frame.columnconfigure(0, weight=1)
         self.freq_analysis_frame.rowconfigure(0, weight=1)
         freq_analysis_label = ttk.Label(self.freq_analysis_frame,
-                                       text="Frequency Analysis Stuff..")
+                                        text="Letter Frequency in English:").grid(row=0, column=0,columnspan=7, padx=5, pady=5, sticky=tk.NSEW )
 
+        eng_freqs = self.sort_dict(FREQS)
+        depth = 4
+        for j in range(depth):
+            for i in range(j, len(eng_freqs), depth):
+                ttk.Label(self.freq_analysis_frame,
+                         text=f'{i+1:02}:{eng_freqs[i][0]}:{eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
+                         ).grid(row=j+1, column=i//depth, padx=1, pady=1, sticky=tk.W)
         self.plot_freqs()
-
         f = Figure(figsize=(5,5), dpi=100)
         a = f.add_subplot(111)
         a.bar(range(26), self.letter_freqs)
@@ -388,28 +401,21 @@ press "Stop" to return to the main program."""
         a.set_xticklabels([x for x in self.alphabet])
         a.set_title("Frequency of each letter (%)")
 
-        canvas = FigureCanvasTkAgg(f, self.freq_analysis_window)
+        canvas = FigureCanvasTkAgg(f, self.freq_analysis_frame)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0, column=0)
         #toolbar = NavigationToolbar2Tk(canvas,self.freq_analysis_window)
-        canvas._tkcanvas.grid(row=1, column=0)
+        canvas._tkcanvas.grid(row=2+depth, column=0, columnspan=7)
 
-        # self.freq_analysis_output = scrolledtext.ScrolledText(self.freq_analysis_frame, height=10, wrap=tk.WORD)
-        # self.freq_analysis_output.columnconfigure(0, weight=1)
-        # self.freq_analysis_output.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW)
-        # auto_decrypt_start_button = ttk.Button(self.freq_analysis_frame, text="Start Decrypt",
-        #                                        command=self.auto_break)
-        # freq_analysis_cancel_button = ttk.Button(self.freq_analysis_frame, text="Cancel",
-        #                                         command=lambda: self.freq_analysis_window.destroy())
-        # freq_analysis_stop_button = ttk.Button(self.freq_analysis_frame, text="Stop!",
-        #                                       command=self.stop_auto_break)
-        # freq_analysis_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
-        # self.freq_analysis_output.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
-        # auto_decrypt_start_button.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
-        # freq_analysis_stop_button.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
-        # freq_analysis_cancel_button.grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
-        # message = "Blah Blah"
-        # self.freq_analysis_output.insert(0.0, message)
+        freq_analysis_ctext_label = ttk.Label(self.freq_analysis_frame,
+                                        text="Letter Frequency in Ciphertext:").grid(row=3+depth, column=0, columnspan=7, padx=5,
+                                                                                 pady=5, sticky=tk.NSEW)
+        ctext_freqs = self.sort_dict(self.ctext_freqs)
+        for j in range(depth):
+            for i in range(j, len(ctext_freqs), depth):
+                tk.Label(self.freq_analysis_frame,
+                         text=f'{i+1:02} : {ctext_freqs[i][0]} : {eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
+                         ).grid(row=j+8, column=i//depth, padx=1, pady=1, sticky=tk.W)
 
     def fileDialog(self):
         # Method which invokes the inport file dialogue
@@ -422,21 +428,21 @@ press "Stop" to return to the main program."""
 
     def plot_freqs(self):
         self.ciphertext = self.input_box.get(0.0, tk.END)
-        analysis = Crypto(self.ciphertext)
-        freqs = analysis.frequencies()
-        print(freqs)
-        # ciphertext = self.ciphertext.upper()
-        # print("ctext =",ciphertext)
+        cryptanalysis = Crypto(self.ciphertext)
+        self.ctext_freqs = cryptanalysis.frequencies()
+        #print(freqs)
         self.letter_freqs = []
         for letter in self.alphabet:
-            if letter in freqs:
-                self.letter_freqs.append(freqs[letter])
+            if letter in self.ctext_freqs:
+                self.letter_freqs.append(self.ctext_freqs[letter])
             else:
                 self.letter_freqs.append(0)
-        print(self.letter_freqs)
-        #letter_colours = plt.cm.hsv([0.8 * i / max(self.letter_freqs) for i in self.letter_freqs])
+        #print(self.letter_freqs)
 
-
+    def sort_dict(self, dict):
+        # This will sort a dictionary (e.g. letter frequencies) by vlaue
+        sorted_dict = sorted(dict.items(), key=lambda y: y[1], reverse=True)
+        return sorted_dict
 
 if __name__ == "__main__":
     App("Simple Substitution Cipher Tool").mainloop()
