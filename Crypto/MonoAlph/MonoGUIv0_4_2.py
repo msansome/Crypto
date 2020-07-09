@@ -28,14 +28,15 @@ from tkinter import messagebox
 from random import shuffle
 from threading import Thread
 import os, re, copy, wordPatterns, makeWordPatterns
+no_matplot_message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system administartor'
 try:
     import matplotlib.pyplot as plt
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+    matplot_installed = True
 except ModuleNotFoundError:
-    message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system administartor'
-    tk.messagebox.showwarning("Warning", message)
-
+    tk.messagebox.showwarning("Warning", no_matplot_message)
+    matplot_installed = False
 import simpleSubHackerV2 as ss_hack
 from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
 from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
@@ -52,7 +53,7 @@ class App(tk.Tk):
         self.sort_dict(FREQS)
         # Create the top (input) frame:
         self.input_frame = tk.LabelFrame(self, text="Ciphertext")
-        self.input_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.input_frame.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky=tk.NSEW)
         self.input_frame.columnconfigure(0, weight=1)
         self.input_frame.rowconfigure(0, weight=1)
 
@@ -64,11 +65,19 @@ class App(tk.Tk):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
-        # Create the middle (tools) frame:
-        self.tools_frame = tk.LabelFrame(self, text="Tools")
-        self.tools_frame.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
-        self.tools_frame.columnconfigure(0, weight=1)
-        self.tools_frame.rowconfigure(0, weight=1)
+        # Create the middle (Analysis tools) frame:
+        self.analysis_tools_frame = tk.LabelFrame(self, text="Analysis Tools")
+        self.analysis_tools_frame.grid(row=1, column=1, padx=5, pady=5, sticky=tk.NSEW)
+        self.analysis_tools_frame.columnconfigure(0, weight=1)
+        self.analysis_tools_frame.rowconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+
+        # Create the middle (Key tools) frame:
+        self.key_tools_frame = tk.LabelFrame(self, text="Key Tools")
+        self.key_tools_frame.grid(row=1, column=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.key_tools_frame.columnconfigure(0, weight=1)
+        self.key_tools_frame.rowconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
@@ -88,7 +97,7 @@ class App(tk.Tk):
                                                                                             sticky=tk.W)
         self.input_box = scrolledtext.ScrolledText(self.input_frame, height=8, wrap=tk.WORD)
         self.input_box.columnconfigure(0, weight=1)
-        self.input_box.grid(row=1, column=0, columnspan=6, sticky=tk.NSEW)
+        self.input_box.grid(row=1, column=0, columnspan=7, sticky=tk.NSEW)
         ttk.Button(self.input_frame,
                    text="Load from File",
                    command=self.fileDialog).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
@@ -101,24 +110,29 @@ class App(tk.Tk):
         ttk.Button(self.input_frame,
                    text="Auto Decrypt",
                    command=self.create_auto_decrypt_window).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
-        ttk.Button(self.input_frame,
-                   text="Frequency Analysis",
-                   command=self.create_freq_analysis_window).grid(row=2, column=5, padx=5, pady=5, sticky=tk.E)
+        # ttk.Button(self.input_frame,
+        #            text="Frequency Analysis",
+        #            command=self.create_freq_analysis_window).grid(row=2, column=5, padx=5, pady=5, sticky=tk.E)
 
-        # Content for the tools frame
-        ttk.Button(self.tools_frame,
+        # Content for the analysis tools frame
+        ttk.Button(self.analysis_tools_frame,
+                   text="Frequency Analysis",
+                   command=self.create_freq_analysis_window).grid(row=0, column=0, padx=2, pady=2, sticky=tk.NW)
+
+        # Content for the key tools frame
+        ttk.Button(self.key_tools_frame,
                    text="Random Key",
                    command=self.random_alphabet).grid(row=0, column=0, padx=2, pady=2,sticky=tk.W)
-        ttk.Button(self.tools_frame,
+        ttk.Button(self.key_tools_frame,
                    text="Copy Key to Clipboard",
                    command=self.copy_key_to_clipboard).grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        ttk.Button(self.tools_frame,
+        ttk.Button(self.key_tools_frame,
                    text="Import Key",
                    command=self.create_key_import_window).grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
-        ttk.Button(self.tools_frame,
+        ttk.Button(self.key_tools_frame,
                    text="Invert Key",
                    command=self.inv_key).grid(row=3, column=0, padx=2, pady=2, sticky=tk.W)
-        ttk.Button(self.tools_frame,
+        ttk.Button(self.key_tools_frame,
                    text="Reset Key",
                    command=self.make_blank_alphabet).grid(row=4, column=0, padx=2, pady=2, sticky=tk.W)
 
@@ -391,22 +405,24 @@ press "Stop" to return to the main program."""
         for j in range(depth):
             for i in range(j, len(eng_freqs), depth):
                 ttk.Label(self.freq_analysis_frame,
-                         text=f'{i+1:02}:{eng_freqs[i][0]}:{eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
+                         text=f'{i+1:02} : {eng_freqs[i][0]} : {eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
                          ).grid(row=j+1, column=i//depth, padx=1, pady=1, sticky=tk.W)
         self.plot_freqs()
-        f = Figure(figsize=(5,5), dpi=100)
-        a = f.add_subplot(111)
-        a.bar(range(26), self.letter_freqs)
-        a.set_xticks(range(26))
-        a.set_xticklabels([x for x in self.alphabet])
-        a.set_title("Frequency of each letter (%)")
+        if matplot_installed:
+            f = Figure(figsize=(5,5), dpi=100)
+            a = f.add_subplot(111)
+            a.bar(range(26), self.letter_freqs)
+            a.set_xticks(range(26))
+            a.set_xticklabels([x for x in self.alphabet])
+            a.set_title("Frequency of each letter (%)")
 
-        canvas = FigureCanvasTkAgg(f, self.freq_analysis_frame)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=0, column=0)
-        #toolbar = NavigationToolbar2Tk(canvas,self.freq_analysis_window)
-        canvas._tkcanvas.grid(row=2+depth, column=0, columnspan=7)
-
+            canvas = FigureCanvasTkAgg(f, self.freq_analysis_frame)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=0, column=0)
+            #toolbar = NavigationToolbar2Tk(canvas,self.freq_analysis_window)
+            canvas._tkcanvas.grid(row=2+depth, column=0, columnspan=7)
+        else:
+            tk.messagebox.showwarning("Warning", no_matplot_message)
         freq_analysis_ctext_label = ttk.Label(self.freq_analysis_frame,
                                         text="Letter Frequency in Ciphertext:").grid(row=3+depth, column=0, columnspan=7, padx=5,
                                                                                  pady=5, sticky=tk.NSEW)
@@ -430,14 +446,12 @@ press "Stop" to return to the main program."""
         self.ciphertext = self.input_box.get(0.0, tk.END)
         cryptanalysis = Crypto(self.ciphertext)
         self.ctext_freqs = cryptanalysis.frequencies()
-        #print(freqs)
         self.letter_freqs = []
         for letter in self.alphabet:
             if letter in self.ctext_freqs:
                 self.letter_freqs.append(self.ctext_freqs[letter])
             else:
                 self.letter_freqs.append(0)
-        #print(self.letter_freqs)
 
     def sort_dict(self, dict):
         # This will sort a dictionary (e.g. letter frequencies) by vlaue
