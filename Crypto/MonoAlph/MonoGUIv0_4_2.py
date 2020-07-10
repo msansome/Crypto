@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.5.2
+# Version 0.5.3
 
 #Version History
 #===============
@@ -16,6 +16,7 @@
 # v0.5 Basic Frequency Analysis added - not yet complete
 # v0.5.1 Improved version of Frequency Analysis plots
 # v0.5.2 Finished version of Frequency Analysis plots
+# v0.5.3 Added Index of Coincidence method
 
 # ToDo: Implement frequency analysis tools
 # ToDo: Create inverse key function
@@ -67,7 +68,7 @@ class App(tk.Tk):
 
         # Create the middle (Analysis tools) frame:
         self.analysis_tools_frame = tk.LabelFrame(self, text="Analysis Tools")
-        self.analysis_tools_frame.grid(row=1, column=1, padx=5, pady=5, sticky=tk.NSEW)
+        self.analysis_tools_frame.grid(row=1, column=1, padx=5, pady=5, sticky=tk.NW)
         self.analysis_tools_frame.columnconfigure(0, weight=1)
         self.analysis_tools_frame.rowconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -110,14 +111,17 @@ class App(tk.Tk):
         ttk.Button(self.input_frame,
                    text="Auto Decrypt",
                    command=self.create_auto_decrypt_window).grid(row=2, column=4, padx=5, pady=5, sticky=tk.E)
-        # ttk.Button(self.input_frame,
-        #            text="Frequency Analysis",
-        #            command=self.create_freq_analysis_window).grid(row=2, column=5, padx=5, pady=5, sticky=tk.E)
 
         # Content for the analysis tools frame
         ttk.Button(self.analysis_tools_frame,
+                   text="Index of Coincidence",
+                   command=self.create_ic_window).grid(row=0, column=0, padx=2, pady=2, sticky=tk.NW)
+        ttk.Button(self.analysis_tools_frame,
                    text="Frequency Analysis",
-                   command=self.create_freq_analysis_window).grid(row=0, column=0, padx=2, pady=2, sticky=tk.NW)
+                   command=self.create_freq_analysis_window).grid(row=1, column=0, padx=2, pady=2, sticky=tk.NW)
+        ttk.Button(self.analysis_tools_frame,
+                   text="Doubles Analysis",
+                   command=None).grid(row=2, column=0, padx=2, pady=2, sticky=tk.NW)
 
         # Content for the key tools frame
         ttk.Button(self.key_tools_frame,
@@ -390,7 +394,7 @@ press "Stop" to return to the main program."""
         self.auto_decrypt_output.insert(0.0, message)
 
     def create_freq_analysis_window(self):
-        # New window spawned when "Import Key" button is clicked
+        # New window spawned when "Frequency Analysis" button is clicked
         self.freq_analysis_window = tk.Toplevel(self)
         self.freq_analysis_window.title("Frequency Analysis")
         self.freq_analysis_frame = tk.LabelFrame(self.freq_analysis_window, text="Letter Frequencies")
@@ -399,7 +403,6 @@ press "Stop" to return to the main program."""
         self.freq_analysis_frame.rowconfigure(0, weight=1)
         freq_analysis_label = ttk.Label(self.freq_analysis_frame,
                                         text="Letter Frequency in English:").grid(row=0, column=0,columnspan=7, padx=5, pady=5, sticky=tk.NSEW )
-
         eng_freqs = self.sort_dict(FREQS)
         depth = 4
         for j in range(depth):
@@ -433,6 +436,32 @@ press "Stop" to return to the main program."""
                          text=f'{i+1:02} : {ctext_freqs[i][0]} : {eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
                          ).grid(row=j+8, column=i//depth, padx=1, pady=1, sticky=tk.W)
 
+    def create_ic_window(self):
+        # New window spawned when "Index of Coincidence" button is clicked
+
+        self.ic_window = tk.Toplevel(self)
+        self.ic_window.title("Index of Coincidence")
+        self.ic_frame = tk.LabelFrame(self.ic_window, text="IC")
+        self.ic_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.ic_frame.columnconfigure(0, weight=1)
+        self.ic_frame.rowconfigure(0, weight=1)
+        ic_explanation = '''        The 'Index of Coincidence' (IC).
+           This is a measure of how similar a frequency distribution is to the
+           uniform distribution (or how 'spiky' it is. The I.C. of a piece of text does not
+           change if the text is enciphered with a substitution cipher. In other words,
+           regular English will have an IC of around 0.066, and so will a piece of
+           ciphertext enciphered with a substitution cipher. However, a polyalphabetic
+           cipher (e.g. a Vigenere cipher) will have an IC of around 0.038.
+           \n'''
+        freq_analysis_label = ttk.Label(self.ic_frame,
+                                        text=ic_explanation).grid(row=0, column=0, padx=5, pady=5, sticky=tk.NSEW )
+        self.ciphertext = self.input_box.get(0.0, tk.END)
+        cryptanalysis = Crypto(self.ciphertext)  # Instantiate a Crypto object
+        ic = round(cryptanalysis.ic(),3)  # Use the ic method of Crypto to get the Index of Coincidence for this text.
+        ic_calc_message = f'The Index of Coincidence for this text is {ic}.'
+        ic_label = ttk.Label(self.ic_frame, text=ic_calc_message, font='TkDefaultFont 13 bold',relief="groove", borderwidth=3, padding=(5,5,5,5)).grid(row=1,column=0, padx=5, pady=5, sticky=tk.NSEW)
+
+
     def fileDialog(self):
         # Method which invokes the inport file dialogue
         self.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select A File", filetypes=[
@@ -443,10 +472,11 @@ press "Stop" to return to the main program."""
             self.input_box.insert(0.0, input_file.read())
 
     def plot_freqs(self):
+        # Get the letter frequencies and prepare them for plotting
         self.ciphertext = self.input_box.get(0.0, tk.END)
-        cryptanalysis = Crypto(self.ciphertext)
-        self.ctext_freqs = cryptanalysis.frequencies()
-        self.letter_freqs = []
+        cryptanalysis = Crypto(self.ciphertext) # Instantiate a Crypto object
+        self.ctext_freqs = cryptanalysis.frequencies() # Use the frequencies method of Crypto to get the letter frequenceies
+        self.letter_freqs = [] # Turn the dictionary into a list and if letters are missing, give them a count of 0
         for letter in self.alphabet:
             if letter in self.ctext_freqs:
                 self.letter_freqs.append(self.ctext_freqs[letter])
