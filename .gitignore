@@ -1,3 +1,7 @@
 /venv/
 /Crypto/venv/
 *.png
+._.DS_Store
+__pycache__
+.idea
+.idea/
