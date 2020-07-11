@@ -2,10 +2,10 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 0.5.3
+# Version 0.5.4
 
-#Version History
-#===============
+# Version History
+# ===============
 # v0.0 Basic tkinter structure constructed
 # v0.1 Inclusion of automated break algorithm plus improved alphabet entry events
 # v0.2 Addition of copy to keyboard facility
@@ -17,6 +17,7 @@
 # v0.5.1 Improved version of Frequency Analysis plots
 # v0.5.2 Finished version of Frequency Analysis plots
 # v0.5.3 Added Index of Coincidence method
+# v0.5.4 Added Double Letters analysis tool
 
 # ToDo: Implement frequency analysis tools
 # ToDo: Create inverse key function
@@ -28,20 +29,24 @@ from tkinter import filedialog
 from tkinter import messagebox
 from random import shuffle
 from threading import Thread
-import os, re, copy, wordPatterns, makeWordPatterns
-no_matplot_message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system administartor'
+import os
+
+# import wordPatterns, makeWordPatterns
+no_matplot_message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see ' \
+                     'Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system ' \
+                     'administartor '
 try:
     import matplotlib.pyplot as plt
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
     matplot_installed = True
 except ModuleNotFoundError:
     tk.messagebox.showwarning("Warning", no_matplot_message)
     matplot_installed = False
 import simpleSubHackerV2 as ss_hack
-from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
-from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
-FREQS = {'A':8.497, 'B':1.492, 'C':2.202, 'D':4.253, 'E':11.162, 'F':2.228, 'G':2.015, 'H':6.094, 'I':7.546, 'J':0.153, 'K':1.292, 'L':4.025, 'M':2.406, 'N':6.749, 'O':7.507, 'P':1.929, 'Q':0.095, 'R':7.587, 'S':6.327, 'T':9.356, 'U':2.758, 'V':0.978, 'W':2.56, 'X':0.15, 'Y':1.994, 'Z':0.077}
+from CryptanalysisV02 import Cryptanalyse as Crypto  # My crypto tools
+from break_simplesub_3 import Mono_break as mb  # Hill-climbing algorithm adapted from Practical Cryptography
 
 
 class App(tk.Tk):
@@ -49,9 +54,10 @@ class App(tk.Tk):
         super().__init__()
         self.title(title)
         self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        self.ciphertext =""
+        self.ciphertext = ""
+        self.alphabet_dict = {}
+        self.output_key = ""
 
-        self.sort_dict(FREQS)
         # Create the top (input) frame:
         self.input_frame = tk.LabelFrame(self, text="Ciphertext")
         self.input_frame.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky=tk.NSEW)
@@ -104,7 +110,7 @@ class App(tk.Tk):
                    command=self.fileDialog).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
         ttk.Button(self.input_frame,
                    text="Encrypt/Decrypt",
-                   command=self.encDec).grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
+                   command=self.enc_dec).grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
         ttk.Button(self.input_frame,
                    text="Pattern Decrypt",
                    command=self.pattern_decrypt).grid(row=2, column=3, padx=5, pady=5, sticky=tk.E)
@@ -121,12 +127,12 @@ class App(tk.Tk):
                    command=self.create_freq_analysis_window).grid(row=1, column=0, padx=2, pady=2, sticky=tk.NW)
         ttk.Button(self.analysis_tools_frame,
                    text="Doubles Analysis",
-                   command=None).grid(row=2, column=0, padx=2, pady=2, sticky=tk.NW)
+                   command=self.create_double_letters_window).grid(row=2, column=0, padx=2, pady=2, sticky=tk.NW)
 
         # Content for the key tools frame
         ttk.Button(self.key_tools_frame,
                    text="Random Key",
-                   command=self.random_alphabet).grid(row=0, column=0, padx=2, pady=2,sticky=tk.W)
+                   command=self.random_alphabet).grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
         ttk.Button(self.key_tools_frame,
                    text="Copy Key to Clipboard",
                    command=self.copy_key_to_clipboard).grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
@@ -145,30 +151,26 @@ class App(tk.Tk):
         self.output_box.grid(row=0, column=0, columnspan=3, sticky=tk.NSEW)
         ttk.Button(self.output_frame,
                    text="Copy to Clipboard",
-                   command=self.copy_output_to_clipboard).grid(row=1, column=0,padx=5, pady=5, sticky=tk.W)
-
-        self.draw_alphabet()
+                   command=self.copy_output_to_clipboard).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        self.create_alphabet_entry_boxes()
         self.make_blank_alphabet()
 
     def make_blank_alphabet(self):
-        # Fill the dictionary with *'s
-        self.alphabet_dict = {}
+        # Fill the dictionary with *'s        
         for i in range(26):
             self.alphabet_dict[self.alphabet[i]] = "*"
         self.draw_key()
 
-    def make_dict_from_key(self): # Use the method in the Cryptanalysis class
-        key = self.key
+    def make_dict_from_key(self):  # Use the method in the Cryptanalysis class
         self.alphabet_dict = Crypto(self.ciphertext, self.key).make_dictionary_from_key()
 
     def make_key_from_dict(self):
         # Creates a 26 character string of the key
-        # We cant just invert the dictionary, because missing letters would cause an error
-        # so we have to find our which letters are missing and add them as * to the key.
-        self.output_key = ""
+        # We can't just invert the dictionary, because missing letters would cause an error
+        # so we have to find which letters are missing and add them as * to the key.
+
         missing_letters = []
-        missing_letter_count = 0
-        key_list = list(self.alphabet_dict.keys()) # Create lists of the keys and values
+        key_list = list(self.alphabet_dict.keys())  # Create lists of the keys and values
         val_list = list(self.alphabet_dict.values())
         for letter in self.alphabet:
             if letter not in val_list:
@@ -189,32 +191,32 @@ class App(tk.Tk):
         print(inverted_dict)
         self.draw_key()
 
-    def draw_alphabet(self):
+    def create_alphabet_entry_boxes(self):
         # This method will run through and create all the labels and entry boxes
         # for the 26 letters of the alphabet in a loop (and store the entry objects in a list)
-        self.entries = [] # Empty list to store entry objects
-        for i in range(26): # Display each letter and an entry box to enter letter
+        self.entries = []  # Empty list to store entry objects
+        for i in range(26):  # Display each letter and an entry box to enter letter
             tk.Label(self.alphabet_frame,
-                        text=self.alphabet[i]
-                        ).grid(row=0, column=i, padx=1, pady=1, sticky=tk.W)
+                     text=self.alphabet[i]
+                     ).grid(row=0, column=i, padx=1, pady=1, sticky=tk.W)
             entry = tk.Entry(self.alphabet_frame, width=1, name=f"letter{self.alphabet[i]}")
             entry.grid(row=1, column=i, padx=1, pady=1, sticky=tk.W)
             entry.bind("<FocusIn>", self.handleIN)
-            entry.bind("<Return>",self.handleOut)
+            entry.bind("<Return>", self.handleOut)
             entry.bind("<FocusOut>", self.handleOut)
             entry.bind("<Escape>", self.handle_esc)
             entry.bind("<Delete>", self.handle_del)
             entry.bind("<BackSpace>", self.handle_del)
-            self.entries.append(entry) # write the object into the list for later access
+            self.entries.append(entry)  # write the object into the list for later access
 
     def draw_key(self):
         # Draw the Alphabet from the dictionary
-        #print("In Draw Key. Key is:", self.key)
+        # print("In Draw Key. Key is:", self.key)
         for i in range(26):
             self.entries[i].delete(0, tk.END)
             self.entries[i].insert(0, self.alphabet_dict[self.alphabet[i]])
 
-    def encDec(self):
+    def enc_dec(self):
         # This method will apply the key to the ciphertext and write the output into the output box
         self.ciphertext = self.input_box.get(0.0, tk.END)
         self.plaintext = ""
@@ -226,7 +228,7 @@ class App(tk.Tk):
                     pLetter = pLetter.lower()
                 self.plaintext += pLetter
             else:
-                self.plaintext += self.ciphertext[j] # Skip stuff like punctuation etc.
+                self.plaintext += self.ciphertext[j]  # Skip stuff like punctuation etc.
         self.output_box.delete(0.0, tk.END)
         self.output_box.insert(0.0, self.plaintext)
 
@@ -288,7 +290,7 @@ class App(tk.Tk):
         self.key = self.key_import_entry.get()
         self.make_dict_from_key()
         self.draw_key()
-        self.encDec()
+        self.enc_dec()
         self.key_import_window.destroy()
 
     def print_values(self):
@@ -297,33 +299,34 @@ class App(tk.Tk):
         for entry in self.entries:
             print(entry, entry.get())
 
-    def handleIN(self,event):
+    def handleIN(self, event):
         # Method triggered by event when cursor clicked in entry box
-        letter = str(event.widget) # Find which letter we're in by referencing the widget name
-        self.letterpos = letter[-1] # Get the actual letter by looking at the last character of the widget name
+        letter = str(event.widget)  # Find which letter we're in by referencing the widget name
+        self.letterpos = letter[-1]  # Get the actual letter by looking at the last character of the widget name
         self.current_letter = self.alphabet_dict[self.letterpos]
         event.widget.delete(0, tk.END)
 
     def handleOut(self, event):
         # Method triggered by event when cursor clicked out of entry box
         typed = event.widget.get()
-        if typed.isalpha() and len(typed)==1:
+        if typed.isalpha() and len(typed) == 1:
             typed = typed.upper()
-            inverted_dict = {v: k for k, v in self.alphabet_dict.items()} #create an inverted dictioanry to look up position
+            inverted_dict = {v: k for k, v in
+                             self.alphabet_dict.items()}  # create an inverted dictioanry to look up position
             if typed in self.alphabet_dict.values() and inverted_dict[typed] != self.letterpos:
                 message = f"Careful! You've used {typed} already at {inverted_dict[typed]}!"
-                tk.messagebox.showwarning("Warning",message)
+                tk.messagebox.showwarning("Warning", message)
                 typed = "*"
-        elif typed =="":
+        elif typed == "":
             typed = self.current_letter
         else:
             typed = "*"
         event.widget.delete(0, tk.END)
         event.widget.insert(0, typed)
         self.alphabet_dict[self.letterpos] = typed
-        self.encDec()
+        self.enc_dec()
         self.output_box.delete(0.0, tk.END)
-        self.output_box.insert(0.0, self.plaintext) # Redraw the modified plaintext
+        self.output_box.insert(0.0, self.plaintext)  # Redraw the modified plaintext
 
     def handle_esc(self, event):
         # Method triggered by event when escape pressed when in entry box
@@ -353,14 +356,16 @@ class App(tk.Tk):
         self.key_import_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
         self.key_import_frame.columnconfigure(0, weight=1)
         self.key_import_frame.rowconfigure(0, weight=1)
-        key_import_label = ttk.Label(self.key_import_frame, text="Please type or paste the key \n(as a 26 character string - all uppercase)")
+        key_import_label = ttk.Label(self.key_import_frame,
+                                     text="Please type or paste the key \n(as a 26 character string - all uppercase)")
         self.key_import_entry = tk.Entry(self.key_import_frame, width=36)
         key_import_button = ttk.Button(self.key_import_frame, text="Import Key", command=self.import_key)
-        key_import_cancel_button = ttk.Button(self.key_import_frame, text="Cancel", command=lambda :self.key_import_window.destroy())
+        key_import_cancel_button = ttk.Button(self.key_import_frame, text="Cancel",
+                                              command=lambda: self.key_import_window.destroy())
         key_import_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.key_import_entry.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
-        key_import_button.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
-        key_import_cancel_button.grid(row=2, column=1, padx=5, pady=5, sticky = tk.E)
+        key_import_button.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        key_import_cancel_button.grid(row=2, column=1, padx=5, pady=5, sticky=tk.E)
 
     def create_auto_decrypt_window(self):
         # New window spawned when "Import Key" button is clicked
@@ -370,22 +375,23 @@ class App(tk.Tk):
         self.auto_decrypt_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
         self.auto_decrypt_frame.columnconfigure(0, weight=1)
         self.auto_decrypt_frame.rowconfigure(0, weight=1)
-        auto_decrypt_label = ttk.Label(self.auto_decrypt_frame, text="Please press start to begin - Press STOP when a likely answer is revealed.")
-        #self.auto_decrypt_output = tk.Text(self.auto_decrypt_frame, width=36)
+        auto_decrypt_label = ttk.Label(self.auto_decrypt_frame,
+                                       text="Please press start to begin - Press STOP when a likely answer is revealed.")
+        # self.auto_decrypt_output = tk.Text(self.auto_decrypt_frame, width=36)
         self.auto_decrypt_output = scrolledtext.ScrolledText(self.auto_decrypt_frame, height=10, wrap=tk.WORD)
         self.auto_decrypt_output.columnconfigure(0, weight=1)
         self.auto_decrypt_output.grid(row=1, column=0, columnspan=5, sticky=tk.NSEW)
         auto_decrypt_start_button = ttk.Button(self.auto_decrypt_frame, text="Start Decrypt",
                                                command=self.auto_break)
         auto_decrypt_cancel_button = ttk.Button(self.auto_decrypt_frame, text="Cancel",
-                                                command=lambda :self.auto_decrypt_window.destroy())
-        auto_decrypt_stop_button =ttk.Button(self.auto_decrypt_frame, text="Stop!",
-                                             command=self.stop_auto_break)
+                                                command=lambda: self.auto_decrypt_window.destroy())
+        auto_decrypt_stop_button = ttk.Button(self.auto_decrypt_frame, text="Stop!",
+                                              command=self.stop_auto_break)
         auto_decrypt_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.auto_decrypt_output.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
-        auto_decrypt_start_button.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
+        auto_decrypt_start_button.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
         auto_decrypt_stop_button.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
-        auto_decrypt_cancel_button.grid(row=2, column=2, padx=5, pady=5, sticky = tk.E)
+        auto_decrypt_cancel_button.grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
         message = """This tool will attempt to break the Substitution Cipher.
 
 It may take several iterations and might take some to to complete.
@@ -395,24 +401,30 @@ press "Stop" to return to the main program."""
 
     def create_freq_analysis_window(self):
         # New window spawned when "Frequency Analysis" button is clicked
+        self.ciphertext = self.input_box.get(0.0, tk.END)
+        self.cryptanalysis = Crypto(self.ciphertext)  # Instantiate a Crypto object with current text
         self.freq_analysis_window = tk.Toplevel(self)
         self.freq_analysis_window.title("Frequency Analysis")
         self.freq_analysis_frame = tk.LabelFrame(self.freq_analysis_window, text="Letter Frequencies")
         self.freq_analysis_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
         self.freq_analysis_frame.columnconfigure(0, weight=1)
         self.freq_analysis_frame.rowconfigure(0, weight=1)
-        freq_analysis_label = ttk.Label(self.freq_analysis_frame,
-                                        text="Letter Frequency in English:").grid(row=0, column=0,columnspan=7, padx=5, pady=5, sticky=tk.NSEW )
-        eng_freqs = self.sort_dict(FREQS)
-        depth = 4
+        ttk.Label(self.freq_analysis_frame,
+                  text="Letter Frequency in English:").grid(row=0, column=0, columnspan=7,
+                                                            padx=5, pady=5, sticky=tk.NSEW)
+        # Get the standard English frequencies from the Cryptanalysis class and sort them into descending order
+        sorted_eng_freqs = self.sort_dict(self.cryptanalysis.std_Eng_freqs)
+        depth = 4  # arrange layout on page (depth = no. of rows)
         for j in range(depth):
-            for i in range(j, len(eng_freqs), depth):
+            for i in range(j, len(sorted_eng_freqs), depth):
                 ttk.Label(self.freq_analysis_frame,
-                         text=f'{i+1:02} : {eng_freqs[i][0]} : {eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
-                         ).grid(row=j+1, column=i//depth, padx=1, pady=1, sticky=tk.W)
-        self.plot_freqs()
+                          text=f'{i + 1:02} : {sorted_eng_freqs[i][0]} : {sorted_eng_freqs[i][1]:6.3f}',
+                          font='TkFixedFont', relief="groove", borderwidth=1
+                          ).grid(row=j + 1, column=i // depth, padx=1, pady=1, sticky=tk.W)
+        ctext_freqs = self.cryptanalysis.frequencies()  # Use the frequencies method of Crypto to get the letter frequencies
+        self.plot_freqs(ctext_freqs)
         if matplot_installed:
-            f = Figure(figsize=(5,5), dpi=100)
+            f = Figure(figsize=(5, 5), dpi=100)
             a = f.add_subplot(111)
             a.bar(range(26), self.letter_freqs)
             a.set_xticks(range(26))
@@ -422,23 +434,75 @@ press "Stop" to return to the main program."""
             canvas = FigureCanvasTkAgg(f, self.freq_analysis_frame)
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0)
-            #toolbar = NavigationToolbar2Tk(canvas,self.freq_analysis_window)
-            canvas._tkcanvas.grid(row=2+depth, column=0, columnspan=7)
+            # toolbar = NavigationToolbar2Tk(canvas,self.freq_analysis_frame).grid(row=1, column=0)
+            # toolbar.update()
+            canvas._tkcanvas.grid(row=2 + depth, column=0, columnspan=7)
         else:
             tk.messagebox.showwarning("Warning", no_matplot_message)
-        freq_analysis_ctext_label = ttk.Label(self.freq_analysis_frame,
-                                        text="Letter Frequency in Ciphertext:").grid(row=3+depth, column=0, columnspan=7, padx=5,
-                                                                                 pady=5, sticky=tk.NSEW)
-        ctext_freqs = self.sort_dict(self.ctext_freqs)
+        ttk.Label(self.freq_analysis_frame,
+                  text="Letter Frequency in Ciphertext:"
+                  ).grid(row=3 + depth, column=0, columnspan=7, padx=5, pady=5, sticky=tk.NSEW)
+        ctext_freqs = self.sort_dict(ctext_freqs)
         for j in range(depth):
             for i in range(j, len(ctext_freqs), depth):
                 tk.Label(self.freq_analysis_frame,
-                         text=f'{i+1:02} : {ctext_freqs[i][0]} : {eng_freqs[i][1]:6.3f}', font='TkFixedFont', relief="groove", borderwidth=1
-                         ).grid(row=j+8, column=i//depth, padx=1, pady=1, sticky=tk.W)
+                         text=f'{i + 1:02} : {ctext_freqs[i][0]} : {ctext_freqs[i][1]:6.3f}', font='TkFixedFont',
+                         relief="groove", borderwidth=1
+                         ).grid(row=j + 8, column=i // depth, padx=1, pady=1, sticky=tk.W)
+
+
+    def create_double_letters_window(self):
+        # New window spawned when "Double Letters" button is clicked
+        self.ciphertext = self.input_box.get(0.0, tk.END)
+        self.cryptanalysis = Crypto(self.ciphertext)  # Instantiate a Crypto object with current text
+        self.double_letters_window = tk.Toplevel(self)
+        self.double_letters_window.title("Double Letters")
+        self.double_letters_frame = tk.LabelFrame(self.double_letters_window, text="Double Letters")
+        self.double_letters_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.double_letters_frame.columnconfigure(0, weight=1)
+        self.double_letters_frame.rowconfigure(0, weight=1)
+        ttk.Label(self.double_letters_frame,
+                  text="The most commonly occurring double letters in English are:").grid(row=0, column=0, columnspan=7,
+                                                            padx=5, pady=5, sticky=tk.NSEW)
+        # Get the standard English double letters from the Cryptanalysis class and sort them into descending order
+        eng_double_letters = self.cryptanalysis.std_Eng_doubles  # Use the Count Doubles method of Crypto to get the double-letter frequencies
+        double_letter_label_text = ''
+        for i in eng_double_letters:
+            double_letter_label_text = double_letter_label_text + f'{i} '
+        ttk.Label(self.double_letters_frame,
+                  text=double_letter_label_text).grid(row=1, column=0, columnspan=7, padx=5, pady=5, sticky=tk.NSEW)
+        ctext_freqs = self.cryptanalysis.count_doubles()
+        self.plot_freqs(ctext_freqs)
+        if matplot_installed:
+            f = Figure(figsize=(5, 5), dpi=100)
+            a = f.add_subplot(111)
+            a.bar(range(26), self.letter_freqs)
+            a.set_xticks(range(26))
+            a.set_xticklabels([x for x in self.alphabet])
+            a.set_title("Frequency of each letter (Count)")
+
+            canvas = FigureCanvasTkAgg(f, self.double_letters_frame)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=0, column=0)
+            # toolbar = NavigationToolbar2Tk(canvas,self.double_letters_frame).grid(row=1, column=0)
+            # toolbar.update()
+            canvas._tkcanvas.grid(row=2, column=0, columnspan=7)
+        else:
+            tk.messagebox.showwarning("Warning", no_matplot_message)
+        ttk.Label(self.double_letters_frame,
+                  text="Double-Letter Frequency in Ciphertext:"
+                  ).grid(row=3, column=0, columnspan=7, padx=5, pady=5, sticky=tk.NSEW)
+        ctext_freqs = self.sort_dict(ctext_freqs)
+        ctext_double_letter_label_text = ''
+        for i in ctext_freqs:
+            ctext_double_letter_label_text = ctext_double_letter_label_text + f'{i[0]*2} (x{i[1]})  '
+        ttk.Label(self.double_letters_frame, text=ctext_double_letter_label_text,
+                  font='TkFixedFont', relief="groove", borderwidth=1).grid(row=4, column=0, padx=1, pady=1, sticky=tk.W)
 
     def create_ic_window(self):
         # New window spawned when "Index of Coincidence" button is clicked
-
+        self.ciphertext = self.input_box.get(0.0, tk.END)
+        self.cryptanalysis = Crypto(self.ciphertext)  # Instantiate a Crypto object with current text
         self.ic_window = tk.Toplevel(self)
         self.ic_window.title("Index of Coincidence")
         self.ic_frame = tk.LabelFrame(self.ic_window, text="IC")
@@ -453,40 +517,35 @@ press "Stop" to return to the main program."""
            ciphertext enciphered with a substitution cipher. However, a polyalphabetic
            cipher (e.g. a Vigenere cipher) will have an IC of around 0.038.
            \n'''
-        freq_analysis_label = ttk.Label(self.ic_frame,
-                                        text=ic_explanation).grid(row=0, column=0, padx=5, pady=5, sticky=tk.NSEW )
-        self.ciphertext = self.input_box.get(0.0, tk.END)
-        cryptanalysis = Crypto(self.ciphertext)  # Instantiate a Crypto object
-        ic = round(cryptanalysis.ic(),3)  # Use the ic method of Crypto to get the Index of Coincidence for this text.
+        ttk.Label(self.ic_frame, text=ic_explanation).grid(row=0, column=0, padx=5, pady=5, sticky=tk.NSEW)
+        ic = round(self.cryptanalysis.ic(), 3)  # Use the ic method of Crypto to get the Index of Coincidence for this text.
         ic_calc_message = f'The Index of Coincidence for this text is {ic}.'
-        ic_label = ttk.Label(self.ic_frame, text=ic_calc_message, font='TkDefaultFont 13 bold',relief="groove", borderwidth=3, padding=(5,5,5,5)).grid(row=1,column=0, padx=5, pady=5, sticky=tk.NSEW)
-
+        ttk.Label(self.ic_frame, text=ic_calc_message, font='TkDefaultFont 13 bold', relief="groove",
+                  borderwidth=3, padding=(5, 5, 5, 5)).grid(row=1, column=0, padx=5, pady=5, sticky=tk.NSEW)
 
     def fileDialog(self):
         # Method which invokes the inport file dialogue
         self.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select A File", filetypes=[
-        ("TXT", "*.txt"),
-        ("All files", "*")])
+            ("TXT", "*.txt"),
+            ("All files", "*")])
         with open(self.filename) as input_file:
-            self.input_box.delete(0.0,tk.END)
+            self.input_box.delete(0.0, tk.END)
             self.input_box.insert(0.0, input_file.read())
 
-    def plot_freqs(self):
+    def plot_freqs(self, ctext_freqs):
         # Get the letter frequencies and prepare them for plotting
-        self.ciphertext = self.input_box.get(0.0, tk.END)
-        cryptanalysis = Crypto(self.ciphertext) # Instantiate a Crypto object
-        self.ctext_freqs = cryptanalysis.frequencies() # Use the frequencies method of Crypto to get the letter frequenceies
-        self.letter_freqs = [] # Turn the dictionary into a list and if letters are missing, give them a count of 0
+        self.letter_freqs = []  # Turn the dictionary into a list and if letters are missing, give them a count of 0
         for letter in self.alphabet:
-            if letter in self.ctext_freqs:
-                self.letter_freqs.append(self.ctext_freqs[letter])
-            else:
+            try:
+                self.letter_freqs.append(ctext_freqs[letter])
+            except KeyError:
                 self.letter_freqs.append(0)
 
     def sort_dict(self, dict):
-        # This will sort a dictionary (e.g. letter frequencies) by vlaue
+        # This will sort a dictionary (e.g. letter frequencies) in descending order by value
         sorted_dict = sorted(dict.items(), key=lambda y: y[1], reverse=True)
         return sorted_dict
+
 
 if __name__ == "__main__":
     App("Simple Substitution Cipher Tool").mainloop()
