@@ -24,10 +24,10 @@ from tkinter import filedialog
 from tkinter import messagebox
 from random import shuffle
 from threading import Thread
-import os, re, copy, wordPatterns, makeWordPatterns
+import os
 import simpleSubHackerV2 as ss_hack
-from CryptanalysisV02 import Cryptanalyse as Crypto # My crypto tools
-from break_simplesub_3 import Mono_break as mb # Hill-climbing algorithm adapted from Practical Cryptography
+from CryptanalysisV02 import Cryptanalyse as Crypto  # My crypto tools
+from break_simplesub_3 import Mono_break as mb  # Hill-climbing algorithm adapted from Practical Cryptography
 
 class App(tk.Tk):
     def __init__(self, title="Sample App", *args, **kwargs):

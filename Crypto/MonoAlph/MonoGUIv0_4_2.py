@@ -30,21 +30,19 @@ from tkinter import messagebox
 from random import shuffle
 from threading import Thread
 import os
-
 # import wordPatterns, makeWordPatterns
 no_matplot_message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see ' \
                      'Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system ' \
-                     'administartor '
+                     'administrator '
 try:
     import matplotlib.pyplot as plt
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-
     matplot_installed = True
 except ModuleNotFoundError:
     tk.messagebox.showwarning("Warning", no_matplot_message)
     matplot_installed = False
-import simpleSubHackerV2 as ss_hack
+import simpleSubPatternHack as ss_hack
 from CryptanalysisV02 import Cryptanalyse as Crypto  # My crypto tools
 from break_simplesub_3 import Mono_break as mb  # Hill-climbing algorithm adapted from Practical Cryptography
 

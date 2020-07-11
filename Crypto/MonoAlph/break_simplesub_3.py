@@ -62,7 +62,7 @@ class Mono_break:
                 self.proc(self.message, self.bestkey)  # return the message and the key to main prog.
 
     def make_output(self, message, key):
-        print(message)
+        print(message, key)
 
 
 def main():
