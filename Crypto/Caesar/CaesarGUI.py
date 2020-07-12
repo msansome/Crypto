@@ -1,19 +1,18 @@
-# Simple Caesar Cipher Brut Force Decryption tool
+# Simple Caesar Cipher Brute Force Decryption tool
 # M Sansome June 2020
 # Version 3.0.1
 # This version: Code redesign. Now uses the ScrollbarFrame class for the middle scrolling window
 # v3.0.1 Added file browser dialogue
 
-# Note: ScrollbarFrame.py and CaesarTextV2_0 both need to be
+# Note: ScrollbarFrame.py and CaesarText (v2.0) both need to be
 # in the same directory as this file in order for it to work.
 
-# ToDo: Add option to load from file?
 
 import os
 import tkinter as tk
 from tkinter import scrolledtext
 from Caesar.ScrollbarFrame import ScrollbarLabelFrame # Import ScrollbarFrame from https://stackoverflow.com/a/62446457/7414759
-from Caesar.CaesarTextV2_0 import caesar # Import the decryption module from my text based version
+from Caesar.CaesarText import caesar # Import the decryption module from my text based version
 from tkinter import filedialog
 from tkinter import ttk
 
