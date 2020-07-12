@@ -1,2 +1,9 @@
 /venv/
 /Crypto/venv/
+PycharmProjects/Crypto/venv/
+*.png
+._.DS_Store
+.DS_Store
+__pycache__
+.idea
+.idea/

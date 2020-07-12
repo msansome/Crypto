@@ -19,7 +19,13 @@ class Cryptanalyse:
         self.key = key
         # Default English letter frequencies (from Wikipdia). Can be replaced with
         # user's own frequencis
-        self.std_Eng_freqs={'E': 12.02, 'T': 9.1, 'A': 8.12, 'O': 7.68, 'I': 7.31, 'N': 6.95, 'S': 6.28, 'R': 6.02, 'H': 5.92, 'D': 4.32, 'L': 3.98, 'U': 2.88, 'C': 2.71, 'M': 2.61, 'F': 2.3, 'Y': 2.11, 'W': 2.09, 'G': 2.03, 'P': 1.82, 'B': 1.49, 'V': 1.11, 'K': 0.69, 'X': 0.17, 'Q': 0.11, 'J': 0.1, 'Z': 0.07}
+        #self.std_Eng_freqs={'E': 12.02, 'T': 9.1, 'A': 8.12, 'O': 7.68, 'I': 7.31, 'N': 6.95, 'S': 6.28, 'R': 6.02, 'H': 5.92, 'D': 4.32, 'L': 3.98, 'U': 2.88, 'C': 2.71, 'M': 2.61, 'F': 2.3, 'Y': 2.11, 'W': 2.09, 'G': 2.03, 'P': 1.82, 'B': 1.49, 'V': 1.11, 'K': 0.69, 'X': 0.17, 'Q': 0.11, 'J': 0.1, 'Z': 0.07}
+        self.std_Eng_freqs = {'A': 8.497, 'B': 1.492, 'C': 2.202, 'D': 4.253, 'E': 11.162, 'F': 2.228, 'G': 2.015, 'H': 6.094,
+                 'I': 7.546, 'J': 0.153, 'K': 1.292, 'L': 4.025, 'M': 2.406, 'N': 6.749, 'O': 7.507, 'P': 1.929,
+                 'Q': 0.095, 'R': 7.587, 'S': 6.327, 'T': 9.356, 'U': 2.758, 'V': 0.978, 'W': 2.56, 'X': 0.15,
+                 'Y': 1.994, 'Z': 0.077}
+        self.std_Eng_doubles =['LL','EE','SS','OO','TT','FF','RR','NN','PP','CC']
+
         self.make_dictionary_from_key()
 
     def make_dictionary_from_key(self):
@@ -103,12 +109,13 @@ class Cryptanalyse:
         return
 
     def count_doubles(self):
-        for i in range (0, len(self.ctext)-1):
-            if self.ctext[i] in self.key and self.ctext[i+1] in self.key and self.ctext[i] == self.ctext[i+1]:
-                if self.ctext[i] in self.doubles:
-                    self.doubles[self.ctext[i]] += 1
+        ctext_upper = self.ctext.upper()  # Convert all ciphertext to uppercase to match the alphabet
+        for i in range (0, len(ctext_upper)-1):
+            if ctext_upper[i].upper() in self.key and ctext_upper[i+1].upper() in self.key and ctext_upper[i] == ctext_upper[i+1]:
+                if ctext_upper[i] in self.doubles:
+                    self.doubles[ctext_upper[i]] += 1
                 else:
-                    self.doubles[self.ctext[i]] = 1
+                    self.doubles[ctext_upper[i]] = 1
         return self.doubles
 
     def print_doubles(self):
@@ -182,10 +189,14 @@ class ngram_score:
         return score
 
 def main():
-    newkey = "L*WOAY*IS**MNXPB*CRJTQ****"
-    test =Cryptanalyse()
+    ctext = "abccdeeccf"
+    test = Cryptanalyse(ctext)
+    doubles = test.count_doubles()
+    print_doubles = test.print_doubles()
+    # newkey = "L*WOAY*IS**MNXPB*CRJTQ****"
+    # test =Cryptanalyse()
 
-    test.make_dictionary_from_key(newkey)
+    #test.make_dictionary_from_key(newkey)
     # ctext='S ilqa, nhramy, ytmm wpxysoaxwa jilj sy lmm op jiasc otjh, sy xpjisxu sr xaumawjao, lxo sy jia farj lcclxuanaxjr lca nloa, lr jiah lca fasxu nloa, ea rilmm bcpqa ptcramqar pxwa lulsx lfma jp oayaxo ptc Srmlxo ipna, jp csoa ptj jia rjpcn py elc, lxo jp ptjmsqa jia naxlwa py jhclxxh, sy xawarrlch ypc halcr, sy xawarrlch lmpxa. Lj lxh clja, jilj sr eilj ea lca upsxu jp jch jp op. Jilj sr jia carpmqa py Isr Nlvarjh’r Upqacxnaxj-aqach nlx py jian. Jilj sr jia esmm py Blcmslnaxj lxo jia xljspx. Jia Fcsjsri Anbsca lxo jia Ycaxwi Cabtfmsw, msxkao jpuajiac sx jiasc wltra lxo sx jiasc xaao, esmm oayaxo jp jia oalji jiasc xljsqa rpsm, lsosxu alwi pjiac mska uppo wpncloar jp jia tjnprj py jiasc rjcaxuji. Aqax jiptui mlcua jclwjr py Atcpba lxo nlxh pmo lxo ylnptr Rjljar ilqa ylmmax pc nlh ylmm sxjp jia ucsb py jia Uarjlbp lxo lmm jia posptr lbblcljtr py Xlzs ctma, ea rilmm xpj ymlu pc ylsm. Ea rilmm up px jp jia axo, ea rilmm ysuij sx Yclxwa, ea rilmm ysuij px jia ralr lxo pwalxr, ea rilmm ysuij esji ucpesxu wpxysoaxwa lxo ucpesxu rjcaxuji sx jia lsc, ea rilmm oayaxo ptc Srmlxo, eiljaqac jia wprj nlh fa, ea rilmm ysuij px jia falwiar, ea rilmm ysuij px jia mlxosxu ucptxor, ea rilmm ysuij sx jia ysamor lxo sx jia rjcaajr, ea rilmm ysuij sx jia ismmr; ea rilmm xaqac rtccaxoac, lxo aqax sy, eiswi S op xpj ypc l npnaxj famsaqa, jisr Srmlxo pc l mlcua blcj py sj eaca rtfvtuljao lxo rjlcqsxu, jiax ptc Anbsca fahpxo jia ralr, lcnao lxo utlcoao fh jia Fcsjsri Ymaaj, eptmo wlcch px jia rjctuuma, txjsm, sx Upo’r uppo jsna, jia Xae Epcmo, esji lmm sjr bpeac lxo nsuij, rjabr ypcji jp jia carwta lxo jia msfacljspx py jia pmo.'
     # key ='LFWOAYUISVKMNXPBDCRJTQEGHZ'
     # plaintext = Cryptanalyse(ctext,key).decipher()

@@ -1,5 +1,12 @@
+# Simple Caesar Cipher Encryption / Decryption tool
+# (My first program using tkinter)
+# M Sansome May 2018
+# Version 2.0
+
+
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 
 
 
@@ -32,20 +39,20 @@ class MyFirstGUI:
         master.grid_columnconfigure(2, weight=1) # Allow columns to grow
         self.inputValue=""
         
-        self.heading = Label(master, text="This is my first GUI for decypting Caesar Ciphers")
-        self.enc_instructions = Label(master, text="PLAINTEXT: Please type, or paste, the text to be encrypted into this box")
-        self.dec_instructions = Label(master, text="CIPHERTEXT: Please type, or paste, the text to be decrypted into this box")
+        self.heading = ttk.Label(master, text="This is my first GUI for decypting Caesar Ciphers")
+        self.enc_instructions = ttk.Label(master, text="PLAINTEXT: Please type, or paste, the text to be encrypted into this box")
+        self.dec_instructions = ttk.Label(master, text="CIPHERTEXT: Please type, or paste, the text to be decrypted into this box")
 
 
-        self.key_label = Label(master, text="Enter the Encryption / Decryption key (1-26)")
+        self.key_label = ttk.Label(master, text="Enter the Encryption / Decryption key (1-26)")
 
         vcmd = master.register(self.validate) # we have to wrap the command
-        self.key_entry_box = Entry(master, validate="key", validatecommand=(vcmd, '%P'), width=3)
+        self.key_entry_box = ttk.Entry(master, validate="key", validatecommand=(vcmd, '%P'), width=3)
 
 
-        self.encrypt_button = Button(master, text="Encrypt", command=self.encrypt)
-        self.decrypt_button = Button(master, text="Decrypt", command=self.decrypt)
-        self.close_button = Button(master, text="Close", command=master.quit)
+        self.encrypt_button = ttk.Button(master, text="Encrypt", command=self.encrypt)
+        self.decrypt_button = ttk.Button(master, text="Decrypt", command=self.decrypt)
+        self.close_button = ttk.Button(master, text="Close", command=master.quit)
 
         self.text_entry_box = Text(master, wrap=WORD, yscrollcommand=self.scrollbar1.set, height=5)
         self.text_output_box = Text(master,wrap=WORD, yscrollcommand=self.scrollbar2.set, height=5)
