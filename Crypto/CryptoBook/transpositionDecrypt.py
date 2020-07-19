@@ -2,7 +2,9 @@
 # https://www.nostarch.com/crackingcodes/ (BSD Licensed)
 # Cracking Codes Book p. 101
 
-import pyperclip, math
+import pyperclip
+import math
+
 
 def main():
     myMessage = 'Cenoonommstmme oo snnio. s s c'
@@ -16,6 +18,7 @@ def main():
 
     # Copy the encrypted string in ciphertext to the clipboard:
     pyperclip.copy(plaintext)
+
 
 def decryptMessage(key, message):
     # The transposition decrypt function will simulate the "columns" and
@@ -39,15 +42,16 @@ def decryptMessage(key, message):
 
     for symbol in message:
         plaintext[column] += symbol
-        column += 1 # Point to the next column.
+        column += 1  # Point to the next column.
 
         # If there are no more columns, OR we're at a shaded box, go back
         # to the first column and the next row:
-        if (column == numOfColumns) or (column == numOfColumns -1 and row >= numOfRows - numOfShadedBoxes):
+        if (column == numOfColumns) or (column == numOfColumns - 1 and row >= numOfRows - numOfShadedBoxes):
             column = 0
             row += 1
 
     return ''.join(plaintext)
+
 
 # if TranspositionDecrypt.py is run (instead of imported as a module) call
 # the main() function:
