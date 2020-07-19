@@ -6,8 +6,8 @@
 # Version 3.0
 
 # from pycipher import SimpleSubstitution as SimpleSub
-from CryptanalysisV02 import Cryptanalyse as Crypto
-from CryptanalysisV02 import ngram_score
+from Cryptanalysis import Cryptanalyse as Crypto
+from Cryptanalysis import ngram_score
 import random
 import re
 
