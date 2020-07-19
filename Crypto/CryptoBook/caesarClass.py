@@ -1,7 +1,6 @@
 class Caesar():
 
-
-    def __init__(self, message='', key=0, extended_symbol_set = False):
+    def __init__(self, message='', key=0, extended_symbol_set=False):
         self.message = message
         self.key = key
         self.extended_symbol_set = extended_symbol_set
@@ -14,7 +13,6 @@ class Caesar():
         self.symb_size = len(self.SYMBOLS)
         self.opCode = '+'
 
-
     def translate(self):
         self.translated_message = ''
         for symbol in self.message:
@@ -26,7 +24,8 @@ class Caesar():
                 symbolIndex = self.SYMBOLS.find(symbol)
 
                 # Perform encryption/decryption:
-                translatedIndex = (eval((str('symbolIndex' + self.opCode + 'self.key'))) % self.symb_size)
+                translatedIndex = (
+                    eval((str('symbolIndex' + self.opCode + 'self.key'))) % self.symb_size)
                 # We construct a string using the variables and the opCode (either a '+' or a '-' and then evaluate it
                 # Then perform modular arithmetic to wrap round
                 self.translated_message += self.SYMBOLS[translatedIndex]
@@ -36,12 +35,12 @@ class Caesar():
                 self.translated_message += symbol
         return self.translated_message
 
-    def encrypt(self, key = 0):
+    def encrypt(self, key=0):
         self.key = key
         self.opCode = '+'
         return self.translate()
 
-    def decrypt(self, key = 0):
+    def decrypt(self, key=0):
         self.key = key
         self.opCode = '-'
         return self.translate()
@@ -49,14 +48,14 @@ class Caesar():
     def brute_force(self):
         for i in range(len(self.SYMBOLS)):
             newtext = self.decrypt(i)
-            print(i,'\t', newtext[:80])
+            print(i, '\t', newtext[:80])
 
 
 text = 'This is my secret message.'
-message = Caesar(text,13, True)
+message = Caesar(text, 13, True)
 ciphertext = message.encrypt(13)
 print(ciphertext)
-message2 = Caesar(ciphertext,13, True)
+message2 = Caesar(ciphertext, 13, True)
 print(message2.decrypt(13))
 message2.brute_force()
 
