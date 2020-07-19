@@ -1,3 +1,10 @@
+# break_simplesub.py
+
+# Taken originally from http://practicalcryptography.com but modified to be OOP
+# and Python3 (originally Python2)
+
+# Version 3.0
+
 # from pycipher import SimpleSubstitution as SimpleSub
 from CryptanalysisV02 import Cryptanalyse as Crypto
 from CryptanalysisV02 import ngram_score
