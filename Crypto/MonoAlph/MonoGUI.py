@@ -195,10 +195,10 @@ class App(tk.Tk):
     def inv_key(self):
         # Not currently used
         inverted_dict = {v: k for k, v in self.alphabet_dict.items()}
-        print(self.alphabet_dict)
+        # print(self.alphabet_dict)
         self.alphabet_dict = inverted_dict
-        print(self.alphabet_dict)
-        print(inverted_dict)
+        # print(self.alphabet_dict)
+        # print(inverted_dict)
         self.draw_key()
 
     def create_alphabet_entry_boxes(self):
