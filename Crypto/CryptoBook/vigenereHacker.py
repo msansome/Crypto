@@ -2,14 +2,19 @@
 # https://www.nostarch.com/crackingcodes/ (BSD Licensed)
 # Cracking Codes Book p. 288
 
-import itertools, re
-import vigenereCipher, pyperclip, freqAnalysis, detectEnglish
+import itertools
+import re
+import vigenereCipher
+import pyperclip
+import freqAnalysis
+import detectEnglish
 
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-MAX_KEY_LENGTH = 16 # Will not attempt keys longer than this.
-NUM_MOST_FREQ_LETTERS = 4 # Attempt this many letters per subkey.
-SILENT_MODE = False # If set to True, program doesn't print anything.
+MAX_KEY_LENGTH = 16  # Will not attempt keys longer than this.
+NUM_MOST_FREQ_LETTERS = 4  # Attempt this many letters per subkey.
+SILENT_MODE = False  # If set to True, program doesn't print anything.
 NONLETTERS_PATTERN = re.compile('[^A-Z]')
+
 
 def main():
     ciphertext = """Adiz Avtzqeci Tmzubb wsa m Pmilqev halpqavtakuoi, lgouqdaf, kdmktsvmztsl, izr xoexghzr kkusitaaf. Vz wsa twbhdg ubalmmzhdad qz hce vmhsgohuqbo ox kaakulmd gxiwvos, krgdurdny i rcmmstugvtawz ca tzm ocicwxfg jf "stscmilpy" oid "uwydptsbuci" wabt hce Lcdwig eiovdnw. Bgfdny qe kddwtk qjnkqpsmev ba pz tzm roohwz at xoexghzr kkusicw izr vrlqrwxist uboedtuuznum. Pimifo Icmlv Emf DI, Lcdwig owdyzd xwd hce Ywhsmnemzh Xovm mby Cqxtsm Supacg (GUKE) oo Bdmfqclwg Bomk, Tzuhvif'a ocyetzqofifo ositjm. Rcm a lqys ce oie vzav wr Vpt 8, lpq gzclqab mekxabnittq tjr Ymdavn fihog cjgbhvnstkgds. Zm psqikmp o iuejqf jf lmoviiicqg aoj jdsvkavs Uzreiz qdpzmdg, dnutgrdny bts helpar jf lpq pjmtm, mb zlwkffjmwktoiiuix avczqzs ohsb ocplv nuby swbfwigk naf ohw Mzwbms umqcifm. Mtoej bts raj pq kjrcmp oo tzm Zooigvmz Khqauqvl Dincmalwdm, rhwzq vz cjmmhzd gvq ca tzm rwmsl lqgdgfa rcm a kbafzd-hzaumae kaakulmd, hce SKQ. Wi 1948 Tmzubb jgqzsy Msf Zsrmsv'e Qjmhcfwig Dincmalwdm vt Eizqcekbqf Pnadqfnilg, ivzrw pq onsaafsy if bts yenmxckmwvf ca tzm Yoiczmehzr uwydptwze oid tmoohe avfsmekbqr dn eifvzmsbuqvl tqazjgq. Pq kmolm m dvpwz ab ohw ktshiuix pvsaa at hojxtcbefmewn, afl bfzdakfsy okkuzgalqzu xhwuuqvl jmmqoigve gpcz ie hce Tmxcpsgd-Lvvbgbubnkq zqoxtawz, kciup isme xqdgo otaqfqev qz hce 1960k. Bgfdny'a tchokmjivlabk fzsmtfsy if i ofdmavmz krgaqqptawz wi 1952, wzmz vjmgaqlpad iohn wwzq goidt uzgeyix wi tzm Gbdtwl Wwigvwy. Vz aukqdoev bdsvtemzh rilp rshadm tcmmgvqg (xhwuuqvl uiehmalqab) vs sv mzoejvmhdvw ba dmikwz. Hpravs rdev qz 1954, xpsl whsm tow iszkk jqtjrw pug 42id tqdhcdsg, rfjm ugmbddw xawnofqzu. Vn avcizsl lqhzreqzsy tzif vds vmmhc wsa eidcalq; vds ewfvzr svp gjmw wfvzrk jqzdenmp vds vmmhc wsa mqxivmzhvl. Gv 10 Esktwunsm 2009, fgtxcrifo mb Dnlmdbzt uiydviyv, Nfdtaat Dmiem Ywiikbqf Bojlab Wrgez avdw iz cafakuog pmjxwx ahwxcby gv nscadn at ohw Jdwoikp scqejvysit xwd "hce sxboglavs kvy zm ion tjmmhzd." Sa at Haq 2012 i bfdvsbq azmtmd'g widt ion bwnafz tzm Tcpsw wr Zjrva ivdcz eaigd yzmbo Tmzubb a kbmhptgzk dvrvwz wa efiohzd."""
@@ -22,6 +27,7 @@ def main():
     else:
         print('Failed to find a decryption key.')
 
+
 def findRepeatSequencesSpacings(message):
     # Goes through the message and finds any 3 to 5 letter sequences
     # that are repeated. Returns a dict with the keys of the sequence and
@@ -31,7 +37,7 @@ def findRepeatSequencesSpacings(message):
     message = NONLETTERS_PATTERN.sub('', message.upper())
 
     # Compile a list of seqLen-letter sequences found in the message:
-    seqSpacings = {} # Keys are sequences, values are lists of int spacings.
+    seqSpacings = {}  # Keys are sequences, values are lists of int spacings.
     for seqLen in range(3, 6):
         for seqStart in range(len(message) - seqLen):
             # Determine what the sequence is, and store it in seq:
@@ -42,7 +48,7 @@ def findRepeatSequencesSpacings(message):
                 if message[i:i + seqLen] == seq:
                     # Found a repeated sequence.
                     if seq not in seqSpacings:
-                        seqSpacings[seq] = [] # Initialise a blank list.
+                        seqSpacings[seq] = []  # Initialise a blank list.
 
                     # Append the spacing distance between the repeated
                     # sequence and the original sequence:
@@ -56,19 +62,19 @@ def getUsefulFactors(num):
     # getUsefulFactors(144) returns [2, 3, 4, 6, 8, 9, 12, 16]
 
     if num < 2:
-        return [] # Numbers less than 2 have no useful factors.
+        return []  # Numbers less than 2 have no useful factors.
 
-    factors = [] # The list of factors found.
+    factors = []  # The list of factors found.
 
     # When finding factors, you only need to check the integers up to
     # MAX_KEY_LENGTH.
-    for i in range(2, MAX_KEY_LENGTH + 1): # Don't test 1: it's not useful.
+    for i in range(2, MAX_KEY_LENGTH + 1):  # Don't test 1: it's not useful.
         if num % i == 0:
             factors.append(i)
             otherFactor = int(num / i)
             if otherFactor < MAX_KEY_LENGTH + 1 and otherFactor != 1:
                 factors.append(otherFactor)
-    return list(set(factors)) # Remove duplicate factors.
+    return list(set(factors))  # Remove duplicate factors.
 
 
 def getItemAtIndexOne(items):
@@ -77,7 +83,7 @@ def getItemAtIndexOne(items):
 
 def getMostCommonFactors(seqFactors):
     # First, get a count of how many times a factor occurs in seqFactors:
-    factorCounts = {} # Key is a factor, value is how often it occurs.
+    factorCounts = {}  # Key is a factor, value is how often it occurs.
 
     # seqFactors keys are sequences, values are lists of factors of the
     # spacings. seqFactors has a value like: {'GFD': [2, 3, 4, 6, 9, 12,
@@ -97,8 +103,7 @@ def getMostCommonFactors(seqFactors):
         if factor <= MAX_KEY_LENGTH:
             # factorsByCount is a list of tuples: (factor, factorCount)
             # factorsByCount has a value like: [(3, 497), (2, 487), ...]
-            factorsByCount.append( (factor, factorCounts[factor]) )
-
+            factorsByCount.append((factor, factorCounts[factor]))
 
     # Sort the list by the factor count:
     factorsByCount.sort(key=getItemAtIndexOne, reverse=True)
@@ -157,7 +162,8 @@ def attemptHackWithKeyLength(ciphertext, mostLikelyKeyLength):
     # These inner lists are the freqScores lists.
     allFreqScores = []
     for nth in range(1, mostLikelyKeyLength + 1):
-        nthLetters = getNthSubkeysLetters(nth, mostLikelyKeyLength, ciphertextUp)
+        nthLetters = getNthSubkeysLetters(
+            nth, mostLikelyKeyLength, ciphertextUp)
 
         # freqScores is a list of tuples like:
         # [(<letter>, <Eng. Freq. match score>), ... ]
@@ -165,8 +171,10 @@ def attemptHackWithKeyLength(ciphertext, mostLikelyKeyLength):
         # See the englishFreqMatchScore() comments in freqAnalysis.py.
         freqScores = []
         for possibleKey in LETTERS:
-            decryptedText = vigenereCipher.decryptMessage(possibleKey, nthLetters)
-            keyAndFreqMatchTuple = (possibleKey, freqAnalysis.englishFreqMatchScore(decryptedText))
+            decryptedText = vigenereCipher.decryptMessage(
+                possibleKey, nthLetters)
+            keyAndFreqMatchTuple = (
+                possibleKey, freqAnalysis.englishFreqMatchScore(decryptedText))
             freqScores.append(keyAndFreqMatchTuple)
         # Sort by match score:
         freqScores.sort(key=getItemAtIndexOne, reverse=True)
@@ -176,10 +184,10 @@ def attemptHackWithKeyLength(ciphertext, mostLikelyKeyLength):
     if not SILENT_MODE:
         for i in range(len(allFreqScores)):
             # Use i + 1 so the first letter is not called the "0th" letter:
-            print(f'Possible letters for letter {i + 1} of the key: ', end = '')
+            print(f'Possible letters for letter {i + 1} of the key: ', end='')
             for freqScore in allFreqScores[i]:
                 print(f'{freqScore[0]} ', end='')
-            print() # Print a newline.
+            print()  # Print a newline.
 
     # Try every combination of the most likely letters for each position
     # in the key:
@@ -192,7 +200,8 @@ def attemptHackWithKeyLength(ciphertext, mostLikelyKeyLength):
         if not SILENT_MODE:
             print(f'Attempting with key: {possibleKey}')
 
-        decryptedText = vigenereCipher.decryptMessage(possibleKey, ciphertextUp)
+        decryptedText = vigenereCipher.decryptMessage(
+            possibleKey, ciphertextUp)
 
         if detectEnglish.isEnglish(decryptedText):
             # Set the hacked ciphertext to the original casing:
@@ -207,7 +216,7 @@ def attemptHackWithKeyLength(ciphertext, mostLikelyKeyLength):
             # Check with user to see if the decryption key has been found:
             print()
             print(f'Possible decryption with key {possibleKey}:')
-            print(decryptedText[:200]) # Only show first 200 characters.
+            print(decryptedText[:200])  # Only show first 200 characters.
             print()
             print('Enter D for done, or Enter to continue')
             response = input('> ')
@@ -219,7 +228,6 @@ def attemptHackWithKeyLength(ciphertext, mostLikelyKeyLength):
     return None
 
 
-
 def hackVigenere(ciphertext):
     # First, we need to do Kasiski Examination to figure out what the
     # length of the ciphertext's encryption key is:
@@ -228,11 +236,13 @@ def hackVigenere(ciphertext):
         keyLengthStr = ''
         for keyLength in allLikelyKeyLengths:
             keyLengthStr += '%s ' % (keyLength)
-        print(f'Kasiski Examination results say the most likely key lengths are: {keyLengthStr}')
+        print(
+            f'Kasiski Examination results say the most likely key lengths are: {keyLengthStr}')
     hackedMessage = None
     for keyLength in allLikelyKeyLengths:
         if not SILENT_MODE:
-            print(f'Attempting decryption with key length {keyLength} ({NUM_MOST_FREQ_LETTERS ** keyLength} possible keys...)')
+            print(
+                f'Attempting decryption with key length {keyLength} ({NUM_MOST_FREQ_LETTERS ** keyLength} possible keys...)')
         hackedMessage = attemptHackWithKeyLength(ciphertext, keyLength)
         if hackedMessage != None:
             break
@@ -241,16 +251,19 @@ def hackVigenere(ciphertext):
     # worked, start brute-forcing through key lengths:
     if hackedMessage == None:
         if not SILENT_MODE:
-            print('Unable to crack message with likely key length(s). Brute forcing key length...')
+            print(
+                'Unable to crack message with likely key length(s). Brute forcing key length...')
         for keyLength in range(1, MAX_KEY_LENGTH + 1):
             # Don't re-check key lengths already tried from Kasiski:
             if keyLength not in allLikelyKeyLengths:
                 if not SILENT_MODE:
-                    print(f'Attempting decryption  with key length {keyLength} ({NUM_MOST_FREQ_LETTERS ** keyLength} possible keys...)')
+                    print(
+                        f'Attempting decryption  with key length {keyLength} ({NUM_MOST_FREQ_LETTERS ** keyLength} possible keys...)')
                 hackedMessage = attemptHackWithKeyLength(ciphertext, keyLength)
                 if hackedMessage != None:
                     break
     return hackedMessage
+
 
 if __name__ == '__main__':
     main()
