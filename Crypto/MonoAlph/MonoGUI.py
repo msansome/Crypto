@@ -2,7 +2,7 @@
 # monaalphabetic substitution ciphers.
 
 # M. Sansome June 2020
-# Version 1.0
+# Version 1.01
 
 # Version History
 # ===============
@@ -19,6 +19,7 @@
 # v0.5.3 Added Index of Coincidence method
 # v0.5.4 Added Double Letters analysis tool
 # v1.0 First release version - most features now added
+# v1.01 Removed debugging print statements
 
 # ToDo: Add ability to click on text and directly change cipher alphabet.
 
