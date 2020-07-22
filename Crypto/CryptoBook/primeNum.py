@@ -9,7 +9,7 @@ import random
 def isPrimeTrialDiv(num):
     # Returns True if num is prime number, otherwise False.
 
-    # Uses the trial division algorithm fro testing primality
+    # Uses the trial division algorithm for testing primality
 
     # All numbers less than 2 are not prime:
     if num < 2:
@@ -40,7 +40,7 @@ def primeSieve(sieveSize):
     # Compile the list of primes:
     primes = []
     for i in range(sieveSize):
-        if sieve[i] == True:
+        if sieve[i] is True:
             primes.append(i)
 
     return primes
