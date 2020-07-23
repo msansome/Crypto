@@ -1,0 +1,14 @@
+I am making my own encryption program. Is it possible to make it so complex it becomes easier to decrypt, rather than harder?
+
+Stop.
+
+Seriously, just stop what you are doing and walk away.
+
+The fact you are asking this question indicates you not an expert in cryptography. Any attempt to develop your own cryptographic primitives will inevitably result in something outrageously insecure.
+
+Several types of really serious encryption are freely available and HIGHLY secure. They have been subjected to attack by thousands of highly skilled reasearchers for years, with no major defects found. Trying to make your own is like an individual trying to compete with Boeing in the commercial airliner business. It's just not possible.
+
+Go read Bruce Schneier's book Applied Cryptography, then see if you can answer your own question.
+
+!"$%^&*(){}[]@~#:./,<>
+That's all the symbols I could come up with...

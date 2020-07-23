@@ -1,6 +1,9 @@
 # Public Key Cipher
 # https://www.nostarch.com/crackingcodes/ (BSD Licensed)
 
+# A modified version which uses the ASCII character set (and allows
+# file entry for plaintext)
+
 import sys
 import math
 
@@ -8,17 +11,23 @@ import math
 # the makePublicPrivateKeys.py program.
 # This program must remain in the same folder as the key files.
 
-SYMBOLS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890 !?.'
+# SYMBOLS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890 !?.'
+symbol_set_size = 256
 
 
 def main():
     # Runs a test that encrypts a message to a file or decrypts a message
     # from a file.
+    import_filename = 'test.txt'
     filename = 'encrypted_file.txt'  # The file to write to/read from.
-    mode = 'decrypt'  # Set to either 'encrypt' or 'decrypt'.
+    mode = 'encrypt'  # Set to either 'encrypt' or 'decrypt'.
+
+    with open(import_filename, 'r') as handle:
+        message = handle.read()
+        print(message)
 
     if mode == 'encrypt':
-        message = 'Journalists belong in the gutter because that is where the ruling classes throw their guilty secrets. Gerald Priestland. The Founding fathers gave the free press the protection it must have to bare the secrets of government and inform the people. Hugo Black.'
+        # message = 'Journalists belong in the gutter because that is where the ruling classes throw their guilty secrets. Gerald Priestland. The Founding fathers gave the free press the protection it must have to bare the secrets of government and inform the people. Hugo Black.'
         pubkeyFilename = 'm_sansome_pubkey.txt'
         print(f'Encrypting and writing to {filename}')
         encrypedText = encryptAndWriteToFile(filename, pubkeyFilename,
@@ -38,19 +47,20 @@ def main():
 
 def getBlocksFromText(message, blockSize):
     # Converts a string message to a list of block integers.
-    for character in message:
-        if character not in SYMBOLS:
-            print(
-                f'ERROR: The symbol set does not contain the  "{character}" character.')
-            sys.exit()
+    # if not message.isascii():
+    #     sys.exit('ERROR: The text contains non alphanumeric data!')
+    try:
+        message.encode('ascii')
+    except UnicodeEncodeError:
+        sys.exit('ERROR: The text contains non alphanumeric data!')
     blockInts = []
     for blockStart in range(0, len(message), blockSize):
         # Calculate the block integer for this block of text.
         blockInt = 0
         for i in range(blockStart, min(blockStart + blockSize,
                                        len(message))):
-            blockInt += (SYMBOLS.index(message[i])) * \
-                (len(SYMBOLS) ** (i % blockSize))
+            blockInt += (ord(message[i])) * \
+                (symbol_set_size ** (i % blockSize))
         blockInts.append(blockInt)
     return blockInts
 
@@ -66,9 +76,9 @@ def getTextFromBlocks(blockInts, messageLength, blockSize):
             if len(message) + i < messageLength:
                 # Decode the message string for the first 128 (or whatever
                 # blockSize is set to) characters from this block integer:
-                charIndex = blockInt // (len(SYMBOLS) ** i)
-                blockInt = blockInt % (len(SYMBOLS) ** i)
-                blockMessage.insert(0, SYMBOLS[charIndex])
+                charIndex = blockInt // (symbol_set_size ** i)
+                blockInt = blockInt % (symbol_set_size ** i)
+                blockMessage.insert(0, chr(charIndex))
         message.extend(blockMessage)
     return ''.join(message)
 
@@ -113,9 +123,9 @@ def encryptAndWriteToFile(messageFilename, keyFilename, message, blockSize=None)
     if blockSize is None:
         # If blockSize isn't given, set it to the largest size allowed by the
         # key size and and symbol set size.
-        blockSize = int(math.log(2 ** keySize, len(SYMBOLS)))
+        blockSize = int(math.log(2 ** keySize, symbol_set_size))
     # Check that key size is large enough for the block size:
-    if not (math.log(2 ** keySize, len(SYMBOLS)) >= blockSize):
+    if not (math.log(2 ** keySize, symbol_set_size) >= blockSize):
         sys.exit(f'ERROR: Block size is too large for the key and symbol '
                  'set size. Did you specify the correct key file and encrypted '
                  ' file?')
@@ -148,7 +158,7 @@ def readFromFileAndDecrypt(messageFilename, keyFilename):
     blockSize = int(blockSize)
 
     # Check that key size is large enough for the block size:
-    if not (math.log(2 ** keySize, len(SYMBOLS)) >= blockSize):
+    if not (math.log(2 ** keySize, symbol_set_size) >= blockSize):
         sys.exit(f'ERROR: Block size is too large for the key and symbol set '
                  'size. Did you specify the correct key file and encrypted file?')
 
