@@ -8,11 +8,12 @@
 # Public Key Encryption / Decryption.
 
 # M. Sansome July 2020
-# Version 0.0
+# Version 0.01
 
 # Version History
 # ===============
 # v0.0 Just the outline structure
+# v0.01 Created warning message and set preference file.
 
 
 import tkinter as tk
@@ -20,32 +21,25 @@ from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter import filedialog
 from tkinter import messagebox
-from random import shuffle
-from threading import Thread
+# from random import shuffle
+# from threading import Thread
 import os
-import myTKStyles as mytk
-# import wordPatterns, makeWordPatterns
-no_matplot_message = 'Sorry - you do not have the Matplotlib Libraries installed.\nYou will not be able to see ' \
-                     'Frequency Analysis graphically.\n\nTry "pip install matplotib" - or see your system ' \
-                     'administrator '
-try:
-    import matplotlib.pyplot as plt
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-    matplot_installed = True
-except ModuleNotFoundError:
-    tk.messagebox.showwarning("Warning", no_matplot_message)
-    matplot_installed = False
-# import simpleSubPatternHack as ss_hack
-# from Cryptanalysis import Cryptanalyse as Crypto  # My crypto tools
-# Hill-climbing algorithm adapted from Practical Cryptography
-# from break_simplesub import Mono_break as mb
+import tkRTF
+import pickle
 
 
 class App(tk.Tk):
     def __init__(self, title="Sample App", *args, **kwargs):
         super().__init__()
-        self.show_warning_message()
+        self.prefs_filename = ".prefs"
+        self.prefs = {}
+        try:
+            self.load_prefs(self.prefs_filename)  # load the preferences file
+        except FileNotFoundError:  # If the file doesn't exist we'll create it anyway
+            self.prefs["hide_warning"] = False
+
+        if not self.prefs['hide_warning']:
+            self.show_warning_message()
         # self.title(title)
         # self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         # self.ciphertext = ""
@@ -156,6 +150,27 @@ class App(tk.Tk):
         #            command=self.copy_output_to_clipboard).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
         # self.create_alphabet_entry_boxes()
         # self.make_blank_alphabet()
+
+    def save_prefs(self, filename):
+        with open(filename, 'wb') as handle:
+            pickle.dump(self.prefs, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_prefs(self, filename):
+        print("Loading prefs...")
+        with open(filename, 'rb') as handle:
+            self.prefs = pickle.load(handle)
+        print("got prefs:", self.prefs)
+
+    # def show_warning(self):
+    #     print("Hide Warning is set to:", self.hide_warning.get())
+    #     self.prefs["hide_warning"] = self.hide_warning.get()
+    #     print(self.prefs)
+
+    def pub_key_warning_close(self):
+        print("Hide Warning is set to:", self.hide_warning.get())
+        self.prefs["hide_warning"] = self.hide_warning.get()
+        self.save_prefs(self.prefs_filename)
+        self.pub_key_warning_window.destroy()
 
     def make_blank_alphabet(self):
         # Fill the dictionary with *'s
@@ -365,23 +380,37 @@ class App(tk.Tk):
         self.pub_key_warning_window.title("Warning!")
         self.pub_key_warning_window.attributes("-topmost", True)
         self.warning_frame = tk.LabelFrame(
-            self.pub_key_warning_window, text="xxx").pack()
-        canvas = tk.Canvas(self.warning_frame).pack()
-        canvas.configure(width=500, height=500, relief='sunken', bd=2,
-                         background='white')
+            self.pub_key_warning_window, text="Using this Public Key Encryption / Decryption Tool",
+            padx=5, pady=5)
+        self.warning_frame.pack(fill="both", expand=True, padx=5, pady=5)
 
-        ttk.Button(self.warning_frame, text="Button").pack()
-        mytk.Heading1(20, 20, canvas, "Important!")
-        mytk.Heading2(20, 60, canvas, "Please note:")
-        mytk.BodyText(20, 100, canvas, "This is what's known as a \"textbook\" implementation "
-                      "of the RSA algorithm. Whilst it correctly implements the basics of "
-                      "the algorithm, and it will be impervious to the sort of cryptanalitic "
-                      "attacks of a normal individual, it will not however resist the attack "
-                      "of a professional cryptanalyst or someone who has access to the resources "
-                      "of a state or military organisation.")
-        mytk.BodyBold(20, 250, canvas, "Under no circumstances should this tool be used as anything "
-                      "but a learning tool. Do NOT use it in a real environment!")
-        # canvas.pack()
+        warn = tkRTF.RichText(self.warning_frame, padx=10, pady=10)
+
+        warn.insert("end", "Important!\n", "h1")
+        warn.insert("end", "\nPlease note:\n", "h2")
+
+        warning_text = ("This is what's known as a \"textbook\" implementation "
+                        "of the RSA algorithm. Whilst it correctly implements the basics of "
+                        "the algorithm, and it will be impervious to the sort of cryptanalitic "
+                        "attacks of a normal individual, it will not however resist the attack "
+                        "of a professional cryptanalyst or someone who has access to the resources "
+                        "of a state or military organisation.")
+
+        warn.insert("end", warning_text, "body_text")
+        warn.insert("end", "\n\nUnder no circumstances should this tool be used as anything "
+                    "but a learning tool. Do NOT use it in a real environment!\n", "bold")
+        warn.pack(fill="both", expand=True)
+        self.hide_warning = tk.BooleanVar()
+
+        tk.Checkbutton(self.warning_frame, text="Do not show this message again",
+                       variable=self.hide_warning, onvalue=1, offvalue=0).pack(side=tk.LEFT,
+                                                                               padx=5, pady=5)
+
+        # warn_close_button = ttk.Button(self.warning_frame, text="Close",
+        #                                command=lambda: self.pub_key_warning_window.destroy())
+        warn_close_button = ttk.Button(self.warning_frame, text="Close",
+                                       command=self.pub_key_warning_close)
+        warn_close_button.pack(side=tk.RIGHT)
 
     def create_key_import_window(self):
         # New window spawned when "Import Key" button is clicked
