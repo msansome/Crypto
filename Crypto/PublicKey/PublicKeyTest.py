@@ -8,12 +8,13 @@
 # Public Key Encryption / Decryption.
 
 # M. Sansome July 2020
-# Version 0.01
+# Version 0.1.0
 
 # Version History
 # ===============
 # v0.0 Just the outline structure
 # v0.01 Created warning message and set preference file.
+# v0.1.0 Basic PK encrypt/decrypt implemented (hard-coded files and keys).
 
 
 import tkinter as tk
@@ -26,6 +27,8 @@ from tkinter import messagebox
 import os
 import tkRTF
 import pickle
+import publicKeyCipherASCII
+import makePublicPrivateKeys
 
 
 class App(tk.Tk):
@@ -40,72 +43,74 @@ class App(tk.Tk):
 
         if not self.prefs['hide_warning']:
             self.show_warning_message()
-        # self.title(title)
+        self.title(title)
+        self.setup_frames()
         # self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         # self.ciphertext = ""
         # self.alphabet_dict = {}
         # self.output_key = ""
 
-        # # Create the top (input) frame:
-        # self.input_frame = tk.LabelFrame(self, text="Ciphertext")
-        # self.input_frame.grid(row=0, column=0, columnspan=3,
-        #                       padx=5, pady=5, sticky=tk.NSEW)
-        # self.input_frame.columnconfigure(0, weight=1)
-        # self.input_frame.rowconfigure(0, weight=1)
+    def setup_frames(self):
+            # Create the top (input) frame:
+        self.input_frame = tk.LabelFrame(self, text="Input Area")
+        self.input_frame.grid(row=0, column=0, columnspan=3,
+                              padx=5, pady=5, sticky=tk.NSEW)
+        self.input_frame.columnconfigure(0, weight=1)
+        self.input_frame.rowconfigure(0, weight=1)
 
-        # # Create the middle (alphabet) frame:
-        # self.alphabet_frame = tk.LabelFrame(self, text="The Alphabet")
-        # self.alphabet_frame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
-        # self.alphabet_frame.columnconfigure(0, weight=1)
-        # self.alphabet_frame.rowconfigure(0, weight=1)
-        # self.rowconfigure(0, weight=1)
-        # self.columnconfigure(0, weight=1)
+        # Create the middle (alphabet) frame:
+        self.alphabet_frame = tk.LabelFrame(self, text="Working Area")
+        self.alphabet_frame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        self.alphabet_frame.columnconfigure(0, weight=1)
+        self.alphabet_frame.rowconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
-        # # Create the middle (Analysis tools) frame:
-        # self.analysis_tools_frame = tk.LabelFrame(self, text="Analysis Tools")
-        # self.analysis_tools_frame.grid(
-        #     row=1, column=1, padx=5, pady=5, sticky=tk.NW)
-        # self.analysis_tools_frame.columnconfigure(0, weight=1)
-        # self.analysis_tools_frame.rowconfigure(0, weight=1)
-        # self.rowconfigure(0, weight=1)
-        # self.columnconfigure(0, weight=1)
+        # Create the middle (Analysis tools) frame:
+        self.analysis_tools_frame = tk.LabelFrame(self, text="Analysis Tools")
+        self.analysis_tools_frame.grid(
+            row=1, column=1, padx=5, pady=5, sticky=tk.NW)
+        self.analysis_tools_frame.columnconfigure(0, weight=1)
+        self.analysis_tools_frame.rowconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
-        # # Create the middle (Key tools) frame:
-        # self.key_tools_frame = tk.LabelFrame(self, text="Key Tools")
-        # self.key_tools_frame.grid(
-        #     row=1, column=2, padx=5, pady=5, sticky=tk.NSEW)
-        # self.key_tools_frame.columnconfigure(0, weight=1)
-        # self.key_tools_frame.rowconfigure(0, weight=1)
-        # self.rowconfigure(0, weight=1)
-        # self.columnconfigure(0, weight=1)
+        # Create the middle (Key tools) frame:
+        self.key_tools_frame = tk.LabelFrame(self, text="Key Tools")
+        self.key_tools_frame.grid(
+            row=1, column=2, padx=5, pady=5, sticky=tk.NSEW)
+        self.key_tools_frame.columnconfigure(0, weight=1)
+        self.key_tools_frame.rowconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
-        # # Create the bottom (output) frame:
-        # self.output_frame = tk.LabelFrame(self, text="Plaintext")
-        # self.output_frame.grid(row=2, column=0, columnspan=3,
-        #                        padx=5, pady=5, sticky=tk.NSEW)
-        # self.output_frame.columnconfigure(0, weight=1)
-        # self.output_frame.rowconfigure(0, weight=1)
+        # Create the bottom (output) frame:
+        self.output_frame = tk.LabelFrame(self, text="Output Area")
+        self.output_frame.grid(row=2, column=0, columnspan=3,
+                               padx=5, pady=5, sticky=tk.NSEW)
+        self.output_frame.columnconfigure(0, weight=1)
+        self.output_frame.rowconfigure(0, weight=1)
 
-        # # Set min size for top and bottom
-        # self.rowconfigure([0, 2], minsize=90)
-        # self.rowconfigure(1, weight=1)  # Row 1 should adjust to window size
-        # # Column 0 should adjust to window size
-        # self.columnconfigure(0, weight=1)
+        # Set min size for top and bottom
+        self.rowconfigure([0, 2], minsize=90)
+        self.rowconfigure(1, weight=1)  # Row 1 should adjust to window size
+        # Column 0 should adjust to window size
+        self.columnconfigure(0, weight=1)
 
-        # # Content for the input frame
-        # tk.Label(self.input_frame,
-        #          text="Please type, or paste, the text to be analysed into this box:").grid(row=0, columnspan=3,
-        #                                                                                     sticky=tk.W)
-        # self.input_box = scrolledtext.ScrolledText(
-        #     self.input_frame, height=8, wrap=tk.WORD)
-        # self.input_box.columnconfigure(0, weight=1)
-        # self.input_box.grid(row=1, column=0, columnspan=7, sticky=tk.NSEW)
-        # ttk.Button(self.input_frame,
-        #            text="Load from File",
-        #            command=self.fileDialog).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
-        # ttk.Button(self.input_frame,
-        #            text="Encrypt/Decrypt",
-        #            command=self.enc_dec).grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
+        # Content for the input frame
+        tk.Label(self.input_frame,
+                 text="Please type, paste, or load from file, the input text into this box:").grid(row=0, columnspan=3,
+                                                                                                   sticky=tk.W)
+        self.input_box = scrolledtext.ScrolledText(
+            self.input_frame, height=8, wrap=tk.WORD)
+        self.input_box.columnconfigure(0, weight=1)
+        self.input_box.grid(row=1, column=0, columnspan=7, sticky=tk.NSEW)
+        ttk.Button(self.input_frame,
+                   text="Load from File",
+                   command=self.fileDialog).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        ttk.Button(self.input_frame,
+                   text="Encrypt/Decrypt",
+                   command=self.enc_dec).grid(row=2, column=2, padx=5, pady=5, sticky=tk.E)
         # ttk.Button(self.input_frame,
         #            text="Pattern Decrypt",
         #            command=self.pattern_decrypt).grid(row=2, column=3, padx=5, pady=5, sticky=tk.E)
@@ -141,13 +146,13 @@ class App(tk.Tk):
         #            text="Reset Key",
         #            command=self.make_blank_alphabet).grid(row=4, column=0, padx=2, pady=2, sticky=tk.W)
 
-        # # Content for the output frame, (one text box only).
-        # self.output_box = scrolledtext.ScrolledText(
-        #     self.output_frame, width=40, height=8, wrap=tk.WORD)
-        # self.output_box.grid(row=0, column=0, columnspan=3, sticky=tk.NSEW)
-        # ttk.Button(self.output_frame,
-        #            text="Copy to Clipboard",
-        #            command=self.copy_output_to_clipboard).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        # Content for the output frame, (one text box only).
+        self.output_box = scrolledtext.ScrolledText(
+            self.output_frame, width=40, height=8, wrap=tk.WORD)
+        self.output_box.grid(row=0, column=0, columnspan=3, sticky=tk.NSEW)
+        ttk.Button(self.output_frame,
+                   text="Copy to Clipboard",
+                   command=self.copy_output_to_clipboard).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
         # self.create_alphabet_entry_boxes()
         # self.make_blank_alphabet()
 
@@ -161,22 +166,17 @@ class App(tk.Tk):
             self.prefs = pickle.load(handle)
         print("got prefs:", self.prefs)
 
-    # def show_warning(self):
-    #     print("Hide Warning is set to:", self.hide_warning.get())
-    #     self.prefs["hide_warning"] = self.hide_warning.get()
-    #     print(self.prefs)
-
     def pub_key_warning_close(self):
         print("Hide Warning is set to:", self.hide_warning.get())
         self.prefs["hide_warning"] = self.hide_warning.get()
         self.save_prefs(self.prefs_filename)
         self.pub_key_warning_window.destroy()
 
-    def make_blank_alphabet(self):
-        # Fill the dictionary with *'s
-        for i in range(26):
-            self.alphabet_dict[self.alphabet[i]] = "*"
-        self.draw_key()
+    # def make_blank_alphabet(self):
+    #     # Fill the dictionary with *'s
+    #     for i in range(26):
+    #         self.alphabet_dict[self.alphabet[i]] = "*"
+    #     self.draw_key()
 
     def make_dict_from_key(self):  # Use the method in the Cryptanalysis class
         self.alphabet_dict = Crypto(
@@ -210,49 +210,68 @@ class App(tk.Tk):
         # print(inverted_dict)
         self.draw_key()
 
-    def create_alphabet_entry_boxes(self):
-        # This method will run through and create all the labels and entry boxes
-        # for the 26 letters of the alphabet in a loop (and store the entry objects in a list)
-        self.entries = []  # Empty list to store entry objects
-        for i in range(26):  # Display each letter and an entry box to enter letter
-            tk.Label(self.alphabet_frame,
-                     text=self.alphabet[i]
-                     ).grid(row=0, column=i, padx=1, pady=1, sticky=tk.W)
-            entry = tk.Entry(self.alphabet_frame, width=1,
-                             name=f"letter{self.alphabet[i]}")
-            entry.grid(row=1, column=i, padx=1, pady=1, sticky=tk.W)
-            entry.bind("<FocusIn>", self.handleIN)
-            entry.bind("<Return>", self.handleOut)
-            entry.bind("<FocusOut>", self.handleOut)
-            entry.bind("<Escape>", self.handle_esc)
-            entry.bind("<Delete>", self.handle_del)
-            entry.bind("<BackSpace>", self.handle_del)
-            # write the object into the list for later access
-            self.entries.append(entry)
+    # def create_alphabet_entry_boxes(self):
+    #     # This method will run through and create all the labels and entry boxes
+    #     # for the 26 letters of the alphabet in a loop (and store the entry objects in a list)
+    #     self.entries = []  # Empty list to store entry objects
+    #     for i in range(26):  # Display each letter and an entry box to enter letter
+    #         tk.Label(self.alphabet_frame,
+    #                  text=self.alphabet[i]
+    #                  ).grid(row=0, column=i, padx=1, pady=1, sticky=tk.W)
+    #         entry = tk.Entry(self.alphabet_frame, width=1,
+    #                          name=f"letter{self.alphabet[i]}")
+    #         entry.grid(row=1, column=i, padx=1, pady=1, sticky=tk.W)
+    #         entry.bind("<FocusIn>", self.handleIN)
+    #         entry.bind("<Return>", self.handleOut)
+    #         entry.bind("<FocusOut>", self.handleOut)
+    #         entry.bind("<Escape>", self.handle_esc)
+    #         entry.bind("<Delete>", self.handle_del)
+    #         entry.bind("<BackSpace>", self.handle_del)
+    #         # write the object into the list for later access
+    #         self.entries.append(entry)
 
-    def draw_key(self):
-        # Draw the Alphabet from the dictionary
-        # print("In Draw Key. Key is:", self.key)
-        for i in range(26):
-            self.entries[i].delete(0, tk.END)
-            self.entries[i].insert(0, self.alphabet_dict[self.alphabet[i]])
+    # def draw_key(self):
+    #     # Draw the Alphabet from the dictionary
+    #     # print("In Draw Key. Key is:", self.key)
+    #     for i in range(26):
+    #         self.entries[i].delete(0, tk.END)
+    #         self.entries[i].insert(0, self.alphabet_dict[self.alphabet[i]])
 
     def enc_dec(self):
         # This method will apply the key to the ciphertext and write the output into the output box
-        self.ciphertext = self.input_box.get(0.0, tk.END)
-        self.plaintext = ""
-        for j in range(len(self.ciphertext)):
-            cLetter = self.ciphertext[j].upper()
-            if cLetter in self.alphabet:
-                pLetter = self.alphabet_dict[cLetter]
-                if self.ciphertext[j].islower():
-                    pLetter = pLetter.lower()
-                self.plaintext += pLetter
-            else:
-                # Skip stuff like punctuation etc.
-                self.plaintext += self.ciphertext[j]
-        self.output_box.delete(0.0, tk.END)
-        self.output_box.insert(0.0, self.plaintext)
+        # self.ciphertext = self.input_box.get(0.0, tk.END)
+        # self.plaintext = ""
+        # for j in range(len(self.ciphertext)):
+        #     cLetter = self.ciphertext[j].upper()
+        #     if cLetter in self.alphabet:
+        #         pLetter = self.alphabet_dict[cLetter]
+        #         if self.ciphertext[j].islower():
+        #             pLetter = pLetter.lower()
+        #         self.plaintext += pLetter
+        #     else:
+        #         # Skip stuff like punctuation etc.
+        #         self.plaintext += self.ciphertext[j]
+        # self.output_box.delete(0.0, tk.END)
+        # self.output_box.insert(0.0, self.plaintext)
+        mode = 'decrypt'
+        filename = 'output.txt'
+        if mode == 'encrypt':
+            # message = 'Journalists belong in the gutter because that is where the ruling classes throw their guilty secrets. Gerald Priestland. The Founding fathers gave the free press the protection it must have to bare the secrets of government and inform the people. Hugo Black.'
+            message = self.input_box.get(0.0, tk.END)
+            pubkeyFilename = 'PublicKey/m_sansome_pubkey.txt'
+            print(f'Encrypting and writing to {filename}')
+            encrypedText = publicKeyCipherASCII.encryptAndWriteToFile(filename, pubkeyFilename,
+                                                                      message)
+            self.output_box.delete(0.0, tk.END)
+            self.output_box.insert(0.0, encrypedText)
+        elif mode == 'decrypt':
+            privKeyFilename = 'PublicKey/m_sansome_privkey.txt'
+            print(f'Reading from {filename} and decrypting...')
+            decryptedText = publicKeyCipherASCII.readFromFileAndDecrypt(
+                filename, privKeyFilename)
+
+            self.output_box.delete(0.0, tk.END)
+            self.output_box.insert(0.0, decryptedText)
 
     def auto_break(self):
         # This will instantiate a Mono_break object from the Mono_break class imported break_simplesub_3
@@ -639,4 +658,4 @@ press "Stop" to return to the main program."""
 
 
 if __name__ == "__main__":
-    App("Simple Substitution Cipher Tool").mainloop()
+    App("RSA Public Key Encryption / Decryption Tool").mainloop()
