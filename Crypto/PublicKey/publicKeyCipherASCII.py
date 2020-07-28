@@ -144,14 +144,17 @@ def encryptAndWriteToFile(messageFilename, keyFilename, message, blockSize=None)
     return encryptedContent
 
 
-def readFromFileAndDecrypt(messageFilename, keyFilename):
-    # Using a key from a key file, read an encrypted message from a file
-    # and then decrypt it. Returns the decrypted message string.
-    keySize, n, d = readKeyFile(keyFilename)
-
+def readFromFile(messageFilename, keyFilename):
     # Read in the message length and the encrypted message from the file:
     with open(messageFilename, 'r') as handle:
         content = handle.read()
+    return content
+
+
+def messageDecrypt(content, keyFilename):
+    # Using a key from a key file, read an encrypted message
+    # and then decrypt it. Returns the decrypted message string.
+    keySize, n, d = readKeyFile(keyFilename)
     messageLength, blockSize, encryptedMessage = content.split('_')
     messageLength = int(messageLength)
     blockSize = int(blockSize)
