@@ -8,7 +8,7 @@
 # Public Key Encryption / Decryption.
 
 # M. Sansome July 2020
-# Version 0.3
+# Version 0.4
 
 # Version History
 # ===============
@@ -17,6 +17,7 @@
 # v0.1.0 Basic PK encrypt/decrypt implemented (hard-coded files and keys).
 # v0.2 Added the encrypt / decrypt mode option
 # v0.3 Completed basic key management functionality
+# v0.4 Added basic key creation functionality
 
 import tkinter as tk
 from tkinter import ttk
@@ -61,41 +62,42 @@ class App(tk.Tk):
 
     def setup_frames(self):
         # Create the top (input) frame:
-        self.input_frame = tk.LabelFrame(self, text="Input Area")
+        self.input_frame = ttk.LabelFrame(self, text="Input Area")
         self.input_frame.grid(row=0, column=0, columnspan=4,
                               padx=5, pady=5, sticky=tk.NSEW)
         self.input_frame.columnconfigure(0, weight=1)
         self.input_frame.rowconfigure(0, weight=1)
 
         # Create the middle (Mode) frame:
-        self.mode_frame = tk.LabelFrame(self, text="Mode")
+        self.mode_frame = ttk.LabelFrame(self, text="Mode")
         self.mode_frame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
         self.mode_frame.rowconfigure(0, weight=1)
         self.mode_frame.columnconfigure(0, weight=1)
 
         # Create the middle (Public Key Selection) frame:
-        self.pub_key_selection_frame = tk.LabelFrame(self, text="Public Key")
+        self.pub_key_selection_frame = ttk.LabelFrame(self, text="Public Key")
         self.pub_key_selection_frame.grid(
             row=1, column=1, padx=5, pady=5, sticky=tk.W)
         self.pub_key_selection_frame.columnconfigure(0, weight=1)
         self.pub_key_selection_frame.rowconfigure(0, weight=1)
 
         # Create the middle (Private Key Selection) frame:
-        self.priv_key_selection_frame = tk.LabelFrame(self, text="Private Key")
+        self.priv_key_selection_frame = ttk.LabelFrame(
+            self, text="Private Key")
         self.priv_key_selection_frame.grid(
             row=1, column=2, padx=5, pady=5, sticky=tk.W)
         self.priv_key_selection_frame.columnconfigure(0, weight=1)
         self.priv_key_selection_frame.rowconfigure(0, weight=1)
 
         # Create the middle (New Key Pair) frame:
-        self.new_key_pair_frame = tk.LabelFrame(self, text="New Key Pair")
+        self.new_key_pair_frame = ttk.LabelFrame(self, text="New Key Pair")
         self.new_key_pair_frame.grid(
             row=1, column=3, padx=5, pady=5, sticky=tk.E)
         self.new_key_pair_frame.columnconfigure(0, weight=1)
         self.new_key_pair_frame.rowconfigure(0, weight=1)
 
         # Create the bottom (output) frame:
-        self.output_frame = tk.LabelFrame(self, text="Output Area")
+        self.output_frame = ttk.LabelFrame(self, text="Output Area")
         self.output_frame.grid(row=2, column=0, columnspan=4,
                                padx=5, pady=5, sticky=tk.NSEW)
         self.output_frame.columnconfigure(0, weight=1)
@@ -109,9 +111,9 @@ class App(tk.Tk):
 
     def frame_content(self):
         # Content for the input frame
-        tk.Label(self.input_frame,
-                 text="Please type, paste, or load from file, the input text into this box:").grid(row=0, columnspan=3,
-                                                                                                   sticky=tk.W)
+        ttk.Label(self.input_frame,
+                  text="Please type, paste, or load from file, the input text into this box:").grid(row=0, columnspan=3,
+                                                                                                    sticky=tk.W)
         self.input_box = scrolledtext.ScrolledText(
             self.input_frame, height=12, wrap=tk.WORD)
         self.input_box.columnconfigure(0, weight=1)
@@ -162,7 +164,7 @@ class App(tk.Tk):
         self.priv_key_combo.bind("<<>ComboboxSelected>")
 
         # Content for the New Key Pair Frame:
-        ttk.Button(self.new_key_pair_frame, text="Create a new Key Pair").grid(
+        ttk.Button(self.new_key_pair_frame, text="Create a new Key Pair", command=self.create_new_key_pair_window).grid(
             row=0, column=0, padx=5, pady=5)
 
         # Content for the output frame, (one text box only).
@@ -255,6 +257,8 @@ class App(tk.Tk):
                     "Error", "Hmmm... Have you used the wrong key?")
 
     def update_the_combos(self):
+        self.priv_key_combo.configure(values=self.priv_keys)
+        self.pub_key_combo.configure(values=self.pub_keys)
         if self.mode == "decrypt":
             self.pub_key_combo.configure(state="disabled")
             self.priv_key_combo.configure(state="readonly")
@@ -291,14 +295,69 @@ class App(tk.Tk):
         out_txt = self.output_box.get(0.0, tk.END)
         self.copy_to_clipboard(out_txt)
 
+    def create_new_key_pair_window(self):
+        self.new_key_pair_window = tk.Toplevel(self)
+        self.new_key_pair_window.title("New Key Pair")
+        self.new_key_pair_window.attributes("-topmost", True)
+        self.new_key_pair_frame = ttk.LabelFrame(
+            self.new_key_pair_window, text="Create a new Key Pair")
+        self.new_key_pair_frame.grid(
+            row=0, column=0, padx=5, pady=5, sticky=tk.NSEW)
+        self.new_key_pair_window.columnconfigure(0, weight=1)
+        self.new_key_pair_window.rowconfigure(0, weight=1)
+
+        self.bit_size_choice = tk.StringVar()
+        bit_sizes = [1024, 2048, 3072, 4096]
+        ttk.Label(self.new_key_pair_frame, text="Bit Size:").grid(
+            row=0, column=0, padx=5, pady=5, sticky=tk.W)
+        self.bit_size = ttk.Combobox(self.new_key_pair_frame,
+                                     textvariable=self.bit_size_choice,
+                                     values=bit_sizes)
+        self.bit_size.current(1)
+        self.bit_size.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
+        self.bit_size.bind("<<>ComboboxSelected>")
+        ttk.Label(self.new_key_pair_frame, text="Name to use for keys:").grid(
+            row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        self.entryText = tk.StringVar()
+        self.get_key_name = ttk.Entry(self.new_key_pair_frame, textvariable=self.entryText).grid(
+            row=1, column=1, padx=5, pady=5)
+        ttk.Button(self.new_key_pair_frame, text="Create Keys",
+                   command=self.make_keys).grid(row=2, column=0, padx=5, pady=5)
+
+    def make_keys(self):
+        entered_name = self.entryText.get()
+        if entered_name == "":
+            return tk.messagebox.showerror(
+                "Naming Error", "The key name cannot be blank.")
+        if entered_name in self.priv_keys or entered_name in self.pub_keys:
+            return tk.messagebox.showerror(
+                "Name Exists!", "There is already a key with that name!")
+        if entered_name[0].isdigit():
+            tk.messagebox.showerror(
+                "Naming Error", "The key name cannot start with a number.")
+        for char in entered_name:
+            if not char.isalnum() and char not in ['_', '.']:
+                tk.messagebox.showerror(
+                    "Naming Error", "The key name can only contain letters, numbers "
+                    "or the underscore character.")
+        key_size = int(self.bit_size_choice.get())
+        print("Key Size =", key_size)
+        makePublicPrivateKeys.makeKeyFiles(
+            entered_name, self.key_dir, key_size)
+        # Now update the key lists
+        self.priv_keys = self.get_keys(self.priv_key_identifier, self.key_dir)
+        self.pub_keys = self.get_keys(self.pub_key_identifier, self.key_dir)
+        self.update_the_combos()
+
     def show_warning_message_window(self):
         self.pub_key_warning_window = tk.Toplevel(self)
         self.pub_key_warning_window.title("Warning!")
         self.pub_key_warning_window.attributes("-topmost", True)
-        self.warning_frame = tk.LabelFrame(
+        self.warning_frame = ttk.LabelFrame(
             self.pub_key_warning_window, text="Using this Public Key Encryption / Decryption Tool",
             padx=5, pady=5)
-        self.warning_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        self.warning_frame.pack(
+            fill="both", expand=True, padx=5, pady=5)
 
         warn = tkRTF.RichText(self.warning_frame, padx=10, pady=10)
 
