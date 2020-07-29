@@ -1,6 +1,13 @@
 # Public Key Generator
 # https://www.nostarch.com/crackingcodes/ (BSD Licensed)
 
+# Version 2
+# =========
+# Edited by M. Sansome July 2020
+# to provide path for files
+# and to remove print statements so that it can be used
+# as an imported module
+
 import random
 import sys
 import os
@@ -35,14 +42,14 @@ def generateKey(keySize):
             break
 
     # Step 3: Calculate d, the mod inverse of e:
-    print('Calculating d that is mod inverse of e...')
+    # print('Calculating d that is mod inverse of e...')
     d = cryptomath.findModInverse(e, (p - 1) * (q - 1))
 
     publicKey = (n, e)
     privateKey = (n, d)
 
-    print('Public Key:', publicKey)
-    print('Private Key:', privateKey)
+    # print('Public Key:', publicKey)
+    # print('Private Key:', privateKey)
 
     return (publicKey, privateKey)
 
@@ -60,19 +67,19 @@ def makeKeyFiles(name, path, keySize):
 
     publicKey, privateKey = generateKey(keySize)
 
-    print()
-    print(
-        f'The public key is a {len(str(publicKey[0]))} and '
-        'a {len(str(publicKey[1]))} digit number.')
-    print(f'Writing public key to file as {path}{name}_pubkey.txt...')
+    # print()
+    # print(
+    #     f'The public key is a {len(str(publicKey[0]))} and '
+    #     'a {len(str(publicKey[1]))} digit number.')
+    # print(f'Writing public key to file as {path}{name}_pubkey.txt...')
     with open(f'{path}{name}_pubkey.txt', 'w') as handle:
         handle.write(f'{keySize},{publicKey[0]},{publicKey[1]}')
 
-    print()
-    print(
-        f'The private key is a {len(str(privateKey[0]))} and '
-        'a {len(str(privateKey[1]))} digit number.')
-    print(f'Writing private key to file as {path}{name}_privkey.txt...')
+    # print()
+    # print(
+    #     f'The private key is a {len(str(privateKey[0]))} and '
+    #     'a {len(str(privateKey[1]))} digit number.')
+    # print(f'Writing private key to file as {path}{name}_privkey.txt...')
     with open(f'{path}{name}_privkey.txt', 'w') as handle:
         handle.write(f'{keySize},{privateKey[0]},{privateKey[1]}')
 
