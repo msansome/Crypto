@@ -8,7 +8,7 @@
 # Public Key Encryption / Decryption.
 
 # M. Sansome July 2020
-# Version 0.4
+# Version 0.5
 
 # Version History
 # ===============
@@ -18,6 +18,10 @@
 # v0.2 Added the encrypt / decrypt mode option
 # v0.3 Completed basic key management functionality
 # v0.4 Added basic key creation functionality
+# v0.5 Refined key creation functionality
+
+
+# ToDo: Add preferences file editing capability
 
 import tkinter as tk
 from tkinter import ttk
@@ -273,7 +277,8 @@ class App(tk.Tk):
     def fileDialog(self):
         # Method which invokes the import file dialogue
         self.clear_input()  # Empty the input box first
-        self.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select A File", filetypes=[
+        self.filename = filedialog.askopenfilename(initialdir=os.getcwd(),
+                                                   title="Select A File", filetypes=[
             ("TXT", "*.txt"),
             ("All files", "*")])
         try:
@@ -308,7 +313,7 @@ class App(tk.Tk):
 
         self.bit_size_choice = tk.StringVar()
         bit_sizes = [1024, 2048, 3072, 4096]
-        ttk.Label(self.new_key_pair_frame, text="Bit Size:").grid(
+        ttk.Label(self.new_key_pair_frame, text="Key Size (bits):").grid(
             row=0, column=0, padx=5, pady=5, sticky=tk.W)
         self.bit_size = ttk.Combobox(self.new_key_pair_frame,
                                      textvariable=self.bit_size_choice,
@@ -321,10 +326,48 @@ class App(tk.Tk):
         self.entryText = tk.StringVar()
         self.get_key_name = ttk.Entry(self.new_key_pair_frame, textvariable=self.entryText).grid(
             row=1, column=1, padx=5, pady=5)
+        ttk.Button(self.new_key_pair_frame, text="Cancel",
+                   command=self.close_keys_window).grid(row=2, column=0, padx=5, pady=5)
         ttk.Button(self.new_key_pair_frame, text="Create Keys",
-                   command=self.make_keys).grid(row=2, column=0, padx=5, pady=5)
+                   command=self.check_keys).grid(row=2, column=1, padx=5, pady=5)
 
-    def make_keys(self):
+        self.confirm_add_keys_frame = ttk.LabelFrame(
+            self.new_key_pair_window, text="Confirm New Key Details")
+        self.confirm_add_keys_frame.grid(
+            row=1, column=0, padx=5, pady=5, sticky=tk.NSEW)
+        self.confirm_add_keys_frame.grid_remove()
+        ttk.Label(self.confirm_add_keys_frame,
+                  text="You are about to add a key with the following details:").grid(
+            row=0, column=0, columnspan=2, padx=5, pady=5, sticky=tk.NSEW)
+        ttk.Label(self.confirm_add_keys_frame, text="Key Size (bits):").grid(
+            row=1, column=0, padx=5, pady=5)
+        self.ks = tk.Text(self.confirm_add_keys_frame, height=1,
+                          width=10)
+        self.ks.grid(row=1, column=1)
+        ttk.Label(self.confirm_add_keys_frame, text="Key Directory").grid(
+            row=2, column=0, padx=5, pady=5)
+        kd = tk.Text(self.confirm_add_keys_frame, height=1,
+                     width=30)
+        kd.grid(row=2, column=1, padx=5, pady=5)
+        kd.insert(0.0, self.key_dir)
+        ttk.Label(self.confirm_add_keys_frame, text="Public Key").grid(
+            row=3, column=0, padx=5, pady=5)
+        self.kn_pub = tk.Text(self.confirm_add_keys_frame, height=1,
+                              width=30)
+        self.kn_pub.grid(row=3, column=1)
+        ttk.Label(self.confirm_add_keys_frame, text="Private Key").grid(
+            row=4, column=0, padx=5, pady=5)
+        self.kn_priv = tk.Text(self.confirm_add_keys_frame, height=1,
+                               width=30)
+        self.kn_priv.grid(row=4, column=1)
+
+        ttk.Button(self.confirm_add_keys_frame, text="Cancel",
+                   command=lambda: self.confirm_add_keys_frame.grid_remove()).grid(row=5,
+                                                                                   column=0, padx=5, pady=5)
+        ttk.Button(self.confirm_add_keys_frame, text="Create Keys",
+                   command=self.make_keys).grid(row=5, column=1, padx=5, pady=5)
+
+    def check_keys(self):
         entered_name = self.entryText.get()
         if entered_name == "":
             return tk.messagebox.showerror(
@@ -333,21 +376,43 @@ class App(tk.Tk):
             return tk.messagebox.showerror(
                 "Name Exists!", "There is already a key with that name!")
         if entered_name[0].isdigit():
-            tk.messagebox.showerror(
+            return tk.messagebox.showerror(
                 "Naming Error", "The key name cannot start with a number.")
         for char in entered_name:
             if not char.isalnum() and char not in ['_', '.']:
-                tk.messagebox.showerror(
+                return tk.messagebox.showerror(
                     "Naming Error", "The key name can only contain letters, numbers "
                     "or the underscore character.")
-        key_size = int(self.bit_size_choice.get())
-        print("Key Size =", key_size)
+        self.key_size = int(self.bit_size_choice.get())
+        self.key_name = entered_name
+        self.ks.insert(0.0, self.key_size)
+        self.kn_pub.insert(0.0, entered_name + self.pub_key_identifier)
+        self.kn_priv.insert(0.0, entered_name + self.priv_key_identifier)
+        self.confirm_add_keys_frame.grid(
+            row=1, column=0, padx=5, pady=5, sticky=tk.NSEW)
+
+    def make_keys(self):
         makePublicPrivateKeys.makeKeyFiles(
-            entered_name, self.key_dir, key_size)
+            self.key_name, self.key_dir, self.key_size)
         # Now update the key lists
         self.priv_keys = self.get_keys(self.priv_key_identifier, self.key_dir)
         self.pub_keys = self.get_keys(self.pub_key_identifier, self.key_dir)
         self.update_the_combos()
+        self.close_keys_window()
+
+    def confirm_add_keys(self):
+        self.confirm_add_keys_frame.configure(state="enabled")
+        # self.confirm_add_keys_frame = ttk.LabelFrame(
+        #     self.confirm_add_keys_frame, text="Confirm New Key Details")
+        # self.confirm_add_keys_frame.grid(
+        #     row=1, column=0, padx=5, pady=5, sticky=tk.NSEW)
+        # ttk.Button(self.confirm_add_keys_frame, text="Cancel",
+        #            command=self.close_keys_window).grid(row=0, column=0, padx=5, pady=5)
+        # ttk.Button(self.confirm_add_keys_frame, text="Create Keys",
+        #            command=self.make_keys).grid(row=0, column=1, padx=5, pady=5)
+
+    def close_keys_window(self):
+        self.new_key_pair_window.destroy()
 
     def show_warning_message_window(self):
         self.pub_key_warning_window = tk.Toplevel(self)
